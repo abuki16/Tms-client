@@ -1,1 +1,1 @@
-"export const PASS_THRESHOLD = 60;" 
+"export const PASS_THRESHOLD = 75;" 
