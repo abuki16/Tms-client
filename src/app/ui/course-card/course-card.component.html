@@ -1,0 +1,19 @@
+<div class="course-card">
+  <h3>
+    <a [routerLink]="['/courses', course().id]">
+      {{ course().title }}
+    </a>
+  </h3>
+  <p class="course-code">{{ course().code }}</p>
+  <p class="capacity-info">
+    Capacity: {{ course().enrollmentCount }} / {{ course().maxCapacity }}
+  </p>
+  
+  @if (course().enrollmentCount >= course().maxCapacity) {
+    <span class="badge full">Full</span>
+    <button disabled>Enroll</button>
+  } @else {
+    <span class="badge open">Accepting enrollments</span>
+    <button (click)="onEnroll()">Enroll</button>
+  }
+</div>
