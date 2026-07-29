@@ -10,16 +10,18 @@
 
   <h2>Course Catalog</h2>
 
-  @if (availableCourses().length === 0) {
-    <p class="empty-state">No courses are available this term. Check back during registration.</p>
+  @if (coursesResource.isLoading()) {
+    <p class="loading-state">Fetching courses from the server...</p>
+  } @else if (coursesResource.error()) {
+    <p class="error-state">Could not load courses. Make sure your .NET API is running.</p>
   } @else {
-    @for (course of availableCourses(); track course.id) {
+    @for (course of coursesResource.value()!; track course.id) {
       <tms-course-card 
         [course]="course" 
         (enrollClicked)="handleEnroll($event)">
       </tms-course-card>
     } @empty {
-      <p class="empty-state">No results match your search.</p>
+      <p class="empty-state">No courses are available this term. Check back during registration.</p>
     }
   }
 
