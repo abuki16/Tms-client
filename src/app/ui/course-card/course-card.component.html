@@ -14,6 +14,9 @@
     <button disabled>Enroll</button>
   } @else {
     <span class="badge open">Accepting enrollments</span>
-    <button (click)="onEnroll()">Enroll</button>
+    <!-- Call onEnroll() when clicked -->
+    <button (click)="onEnroll()" class="btn-enroll">
+      Enroll
+    </button>
   }
 </div>

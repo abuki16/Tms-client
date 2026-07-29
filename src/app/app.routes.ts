@@ -16,16 +16,25 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "enroll/:id",
+    loadComponent: () =>
+      import("./features/enrollment-form/enrollment-form.component").then(
+        (m) => m.EnrollmentFormComponent,
+      ),
+  },
+  {
     path: "enroll",
     loadComponent: () =>
-      import("./features/enrollment-form/enrollment-form.component")
-        .then((m) => m.EnrollmentFormComponent)
+      import("./features/enrollment-form/enrollment-form.component").then(
+        (m) => m.EnrollmentFormComponent,
+      ),
   },
   {
     path: "enrollments",
     loadComponent: () =>
-      import("./features/enrollment-list/enrollment-list.component")
-        .then((m) => m.EnrollmentListComponent)
+      import("./features/enrollment-list/enrollment-list.component").then(
+        (m) => m.EnrollmentListComponent,
+      ),
   },
   { path: "", redirectTo: "dashboard", pathMatch: "full" },
 ];
