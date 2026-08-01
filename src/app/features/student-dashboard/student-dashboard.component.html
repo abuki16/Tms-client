@@ -2,6 +2,7 @@
   <h1>Welcome, {{ studentName() }}</h1>
   <p>Credits Earned: {{ earnedCredits() }}</p>
   <p>Graduation Status: {{ graduationStatus() }}</p>
+  <p>Pending Enrollments: {{ store.pendingCount() }}</p>
   <button (click)="registerForClass()">
     Register for a Class (+3 credits)
   </button>

@@ -11,6 +11,7 @@ export class EnrollmentListComponent implements OnInit {
 
   ngOnInit() {
     this.store.loadEnrollments();
+    console.log('Enrollment store data: ', )
   }
 
   onApprove(id: string) {

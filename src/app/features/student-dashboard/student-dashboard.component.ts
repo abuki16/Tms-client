@@ -1,11 +1,10 @@
-// These are the Angular functions we need. signal() and computed() come from Angular's core.
-import { Component, signal, computed, inject } from "@angular/core";
+import { Component, signal, computed, inject, OnInit } from "@angular/core";
 import { CourseCardComponent } from "../../ui/course-card/course-card.component";
 import { Course } from "../../models/course.model";
 import { rxResource } from "@angular/core/rxjs-interop";
 import { CourseService } from "../../services/course.service";
+import { EnrollmentStore } from "../../store/enrollment.store";
 
-// The @Component decorator tells Angular: "This class is a visual component."
 @Component({
   selector: "app-student-dashboard",
   standalone: true,
@@ -13,25 +12,25 @@ import { CourseService } from "../../services/course.service";
   templateUrl: "./student-dashboard.component.html",
   styleUrl: "./student-dashboard.component.scss",
 })
-export class StudentDashboardComponent {
-  // Inject the CourseService instance to communicate with the .NET API
+export class StudentDashboardComponent implements OnInit {
   private api = inject(CourseService);
+  store = inject(EnrollmentStore);
+
+  ngOnInit() {
+    this.store.loadEnrollments();
+  }
 
   studentName = signal("Liya Kebede");
   earnedCredits = signal(45);
 
-  // computed() creates a read-only signal that derives its value from other signals.
   graduationStatus = computed(() =>
     this.earnedCredits() >= 120 ? "Eligible for Graduation" : "In Progress",
   );
 
-  // rxResource fetches the course catalog asynchronously from the backend API
-  // and surfaces it as signals (.value(), .isLoading(), .error()) automatically.
   coursesResource = rxResource({
     stream: () => this.api.getAll(),
   });
 
-  // signal(null) means: "This signal holds either a Course or nothing."
   selectedCourse = signal<Course | null>(null);
 
   registerForClass() {
@@ -40,7 +39,13 @@ export class StudentDashboardComponent {
 
   handleEnroll(course: Course) {
     this.selectedCourse.set(course);
-    console.log('Enrollment requested for:', course.title);
     
+    // Calls the store method to persist the enrollment and update global state as Pending
+    this.store.enrollStudent({
+      courseId: course.id,
+      studentId: 1,
+    });
+
+    console.log('Enrollment requested and added to store as Pending for:', course.title);
   }
 }
