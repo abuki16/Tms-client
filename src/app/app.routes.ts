@@ -9,6 +9,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "instructor-dashboard",
+    loadComponent: () =>
+      import("./features/instructor-dashboard/instructor-dashboard.component").then(
+        (m) => m.InstructorDashboardComponent,
+      ),
+  },
+  {
     path: "courses/:id",
     loadComponent: () =>
       import("./features/course-detail/course-detail.component").then(

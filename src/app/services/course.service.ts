@@ -1,12 +1,13 @@
-import { Service, inject } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { map } from "rxjs/operators";
 import { Course, CourseDetail, PagedResponse } from "../models/course.model";
 
-@Service()
+@Injectable({
+  providedIn: "root"
+})
 export class CourseService {
   private http = inject(HttpClient);
-  
   private baseUrl = "http://localhost:5049/api/v2/courses";
 
   getAll(page = 1, pageSize = 50) {
@@ -15,8 +16,8 @@ export class CourseService {
         params: { page: page.toString(), pageSize: pageSize.toString() },
       })
       .pipe(
-        // V2 returns an envelope with 'data' instead of 'items'
-        map((p: any) => p.data)
+        // Map to 'items' based on your PagedResponse interface contract
+        map((p: PagedResponse<Course>) => p.items || (p as any).data || [])
       );
   }
 

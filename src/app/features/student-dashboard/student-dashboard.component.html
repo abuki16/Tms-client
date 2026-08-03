@@ -24,7 +24,7 @@
     @for (course of coursesResource.value()!; track course.id) {
       <div class="course-row mb-3">
         <div class="text-muted small mb-1">
-          Capacity: {{ course.enrollmentCount }} / {{ course.maxCapacity }}
+          Capacity: {{ getEnrolledCount(course.id) }} / {{ course.maxCapacity }}
         </div>
         
         <tms-course-card 

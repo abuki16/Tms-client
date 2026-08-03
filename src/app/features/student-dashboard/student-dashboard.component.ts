@@ -37,11 +37,20 @@ export class StudentDashboardComponent implements OnInit {
     this.earnedCredits.update((c) => c + 3);
   }
 
-handleEnroll(course: Course) {
+  /**
+   * Dynamically calculates live enrollment counts using course.id / courseId.
+   */
+  getEnrolledCount(courseId: number | string): number {
+    return this.store.entities().filter(
+      (e: any) => (e.courseId === courseId || e.courseCode === courseId) && e.status !== 'Rejected'
+    ).length;
+  }
+
+  handleEnroll(course: Course) {
     this.selectedCourse.set(course);
     
     this.store.enrollStudent({
-      courseCode: course.code, // 🟢 Passing course.code string to match EnrollStudentCommand
+      courseCode: course.code, 
       studentId: 1, 
     });
 

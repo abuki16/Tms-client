@@ -1,9 +1,10 @@
 export interface Enrollment {
-id: string;
-studentId: number;
-studentName: string;
-courseId: number;
-courseName: string;
-status: 'Pending' | 'Approved' | 'Rejected';
-enrolledAt: string;
+  id: string | number;
+  studentId: number;
+  studentName?: string;
+  courseId: number;
+  courseCode?: string;
+  courseName?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  enrolledAt: string;
 }
