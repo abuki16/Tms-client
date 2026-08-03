@@ -1,0 +1,52 @@
+<div class="enrollment-list-container my-4">
+  <h2>Enrollment Management</h2>
+
+  <!-- 🟢 Dynamic Counters for Total & Pending State -->
+  <div class="d-flex gap-2 my-3">
+    <span class="badge bg-primary">
+      Total Enrollments: {{ store.entities().length }}
+    </span>
+    <span class="badge bg-warning text-dark">
+      Pending Approvals: {{ store.pendingCount() }}
+    </span>
+  </div>
+
+  @if (store.isLoading()) {
+    <p>Loading enrollments...</p>
+  }
+
+  @if (store.error()) {
+    <p class="text-danger">{{ store.error() }}</p>
+  }
+
+  <div class="list-group">
+    @for (enrollment of store.entities(); track enrollment.id) {
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ enrollment.studentName }}</strong> — {{ enrollment.courseName }} 
+          <span class="badge ms-2" [ngClass]="{
+            'bg-warning text-dark': enrollment.status === 'Pending',
+            'bg-success': enrollment.status === 'Approved',
+            'bg-danger': enrollment.status === 'Rejected'
+          }">
+            {{ enrollment.status }}
+          </span>
+        </div>
+
+        <div>
+          @if (enrollment.status === 'Pending') {
+            <button class="btn btn-sm btn-success" (click)="onApprove(enrollment.id)">
+              Approve
+            </button>
+          } @else {
+            <span class="text-success fw-bold small">Approved ✓</span>
+          }
+        </div>
+      </div>
+    } @empty {
+      @if (!store.isLoading()) {
+        <p class="text-muted">No enrollments found. Go to the dashboard to enroll in classes.</p>
+      }
+    }
+  </div>
+</div>

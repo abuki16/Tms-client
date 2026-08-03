@@ -1,7 +1,5 @@
 import { Routes } from "@angular/router";
 
-
-
 export const routes: Routes = [
   {
     path: "dashboard",
@@ -17,11 +15,19 @@ export const routes: Routes = [
         (m) => m.CourseDetailComponent,
       ),
   },
-
-{
-  path: 'enroll/:id',
-  loadComponent: () => import('./features/enrollment-form/enrollment-form.component')
-    .then(m => m.EnrollmentFormComponent)
-},
+  {
+    path: "enroll/:id",
+    loadComponent: () =>
+      import("./features/enrollment-form/enrollment-form.component").then(
+        (m) => m.EnrollmentFormComponent,
+      ),
+  },
+  {
+    path: "enrollments",
+    loadComponent: () =>
+      import("./features/enrollment-list/enrollment-list.component").then(
+        (m) => m.EnrollmentListComponent,
+      ),
+  },
   { path: "", redirectTo: "dashboard", pathMatch: "full" },
 ];
