@@ -1,18 +1,22 @@
 <div class="dashboard">
-  <h1>Welcome, {{ studentName() }}</h1>
-  <p>Credits Earned: {{ earnedCredits() }}</p>
-  <p>Graduation Status: {{ graduationStatus() }}</p>
+  <div class="header-section">
+    <h1>Welcome, {{ studentName() }}</h1>
+    <div class="stats-badge">
+      <p><strong>Credits Earned:</strong> {{ earnedCredits() }}</p>
+      <p><strong>Status:</strong> <span class="badge">{{ graduationStatus() }}</span></p>
+    </div>
+  </div>
   
-  <!-- Dashboard summary widget showing pending count from the singleton store -->
+  <!-- Dashboard summary widget showing pending count -->
   <div class="alert alert-info my-2">
     Pending Enrollments Needing Review: <strong>{{ store.pendingCount() }}</strong>
   </div>
 
-  <button (click)="registerForClass()">
+  <button class="btn-primary" (click)="registerForClass()">
     Register for a Class (+3 credits)
   </button>
 
-  <hr />
+  <hr class="divider" />
 
   <h2>Course Catalog</h2>
 
@@ -21,25 +25,34 @@
   } @else if (coursesResource.error()) {
     <p class="error-state">Could not load courses. Make sure your .NET API is running.</p>
   } @else {
-    @for (course of coursesResource.value()!; track course.id) {
-      <div class="course-row mb-3">
-        <div class="text-muted small mb-1">
-          Capacity: {{ getEnrolledCount(course.id) }} / {{ course.maxCapacity }}
+    <div class="courses-grid">
+      @for (course of coursesResource.value()!; track course.id) {
+        <div class="course-card-wrapper">
+          <div class="course-meta">
+            <span class="capacity-badge">
+              Capacity: {{ getEnrolledCount(course.id) }} / {{ course.maxCapacity }}
+            </span>
+          </div>
+          
+          <tms-course-card 
+            [course]="course" 
+            (enrollClicked)="handleEnroll($event)">
+          </tms-course-card>
         </div>
-        
-        <tms-course-card 
-          [course]="course" 
-          (enrollClicked)="handleEnroll($event)">
-        </tms-course-card>
-      </div>
-    } @empty {
-      <p class="empty-state">No courses are available this term. Check back during registration.</p>
-    }
+      } @empty {
+        <p class="empty-state">No courses are available this term. Check back during registration.</p>
+      }
+    </div>
   }
+  
 
   @if (selectedCourse(); as picked) {
     <div class="selection-hint">
-      Last enrollment request: {{ picked.title }} ({{ picked.code }})
+      <strong>Last enrollment request:</strong> {{ picked.title }} ({{ picked.code }})
     </div>
   }
+  <div class="dashboard-footer">
+    <a routerLink="/enrollments" class="enrollments-link">Enrollments</a>
+  </div>
+  
 </div>

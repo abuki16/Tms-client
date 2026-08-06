@@ -1,0 +1,14 @@
+table {
+width: 100%;
+}
+.status-badge {
+padding: 0.25rem 0.75rem;
+border-radius: 12px;
+font-size: 0.8rem;
+font-weight: 600;
+text-transform: uppercase;
+}
+.status-badge.approved {
+background: #065f46;
+color: #a7f3d0;
+}
