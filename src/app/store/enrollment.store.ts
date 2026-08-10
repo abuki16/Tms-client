@@ -1,4 +1,6 @@
 import { computed, inject } from '@angular/core';
+import { LiveSyncService } from '../services/live-sync.service';
+
 import {
   signalStore,
   withComputed,
@@ -6,14 +8,9 @@ import {
   patchState,
   withState,
 } from '@ngrx/signals';
-import {
-  withEntities,
-  setAllEntities,
-  updateEntity,
-  addEntity,
-} from '@ngrx/signals/entities';
+import { withEntities, setAllEntities, updateEntity, addEntity } from '@ngrx/signals/entities';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, concatMap, tap, catchError, EMPTY } from 'rxjs';
+import { pipe, concatMap, tap, catchError, switchMap, EMPTY } from 'rxjs';
 import { EnrollmentService } from '../services/enrollment.service';
 import { Enrollment } from '../models/enrollment.model';
 
@@ -26,7 +23,24 @@ export const EnrollmentStore = signalStore(
       () => store.entities().filter((e: Enrollment) => e.status === 'Pending').length
     ),
   })),
-  withMethods((store, api = inject(EnrollmentService)) => ({
+  withMethods((store, api = inject(EnrollmentService), sync = inject(LiveSyncService)) => ({
+    // Listens to SignalR live sync stream and updates store state automatically
+    listenForLiveUpdates: rxMethod<void>(
+      pipe(
+        tap(() => sync.connect()),
+        switchMap(() => sync.events$),
+        tap(event => {
+          console.log('SignalR event processed in store:', event);
+          patchState(
+            store,
+            updateEntity({ 
+              id: Number(event.id), // Converts backend string ID to number to match store entity type
+              changes: { status: event.status } 
+            })
+          );
+        })
+      )
+    ),
     loadEnrollments: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
@@ -46,8 +60,20 @@ export const EnrollmentStore = signalStore(
         tap(() => patchState(store, { error: null })),
         concatMap((request) =>
           api.create(request.courseCode, request).pipe(
+            // tap((createdEnrollment: Enrollment) => {
+              
+            //   patchState(store, addEntity(createdEnrollment));
+            // }),
             tap((createdEnrollment: Enrollment) => {
-              patchState(store, addEntity(createdEnrollment));
+              // Normalize the response to match store entity types and filter rules
+              const normalizedEnrollment: Enrollment = {
+                ...createdEnrollment,
+                id: Number(createdEnrollment.id), // Ensure ID is a number
+                status: 'Pending'                 // Force status to match filter criteria
+              };
+
+              // Instantly add the entity to the store state
+              patchState(store, addEntity(normalizedEnrollment));
             }),
             catchError((err) => {
               patchState(store, { error: err.message || 'Failed to enroll in course' });
