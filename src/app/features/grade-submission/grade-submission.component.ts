@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject,ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, exhaustMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GradeService, GradePayload } from '../../services/grade.service';
+
 
 @Component({
   selector: 'tms-grade-submission',
@@ -25,6 +26,7 @@ import { GradeService, GradePayload } from '../../services/grade.service';
 export class GradeSubmissionComponent {
   private api = inject(GradeService);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
 
   // Reactive Form definition with initial model values and validators
   gradeForm = this.fb.group({
@@ -48,22 +50,29 @@ export class GradeSubmissionComponent {
         exhaustMap(payload => {
           this.isSubmitting = true;
           this.submissionStatus = 'Submitting grade to server...';
+          this.cdr.markForCheck();
           return this.api.postGrade(payload);
+      
         }),
         // takeUntilDestroyed: automatically unsubscribes when Angular
         // destroys this component, preventing memory leaks.
         // Placed inside constructor to inherit the active injection context.[cite: 2]
+          
         takeUntilDestroyed()
       )
       .subscribe({
   next: (result: any) => {
+      console.log('in process  ..');
     this.isSubmitting = false;
     this.submissionStatus = `Grade saved successfully! Record ID: ${result.id}`;
-    this.gradeForm.reset({ studentId: 101, courseId: 302, score: 88 });
+    this.cdr.markForCheck();
+    console.log('out of process  ..', this.submissionStatus );
+    //this.gradeForm.reset({ studentId: 101, courseId: 302, score: 88 });
   },
   error: (err) => {
     this.isSubmitting = false;
     this.submissionStatus = `Submission failed: ${err.message || 'Server error'}`;
+    this.cdr.markForCheck();
   }
 });
   }

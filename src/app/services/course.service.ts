@@ -1,6 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { map } from "rxjs/operators";
+import { environment } from "../../environments/environment";
 import { Course, CourseDetail, PagedResponse } from "../models/course.model";
 
 @Injectable({
@@ -8,7 +9,8 @@ import { Course, CourseDetail, PagedResponse } from "../models/course.model";
 })
 export class CourseService {
   private http = inject(HttpClient);
-  private baseUrl = "http://localhost:5049/api/v2/courses";
+  // Replaced hardcoded localhost URL with the environment configuration base path
+  private readonly baseUrl = `${environment.apiUrl}/courses`;
 
   getAll(page = 1, pageSize = 50) {
     return this.http

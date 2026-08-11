@@ -7,6 +7,8 @@
   "/hubs": {
     "target": "http://localhost:5049",
     "secure": false,
-    "ws": true
+    "ws": true,
+    "changeOrigin": true,
+    "xfwd": true
   }
 }
