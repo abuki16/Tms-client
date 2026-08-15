@@ -31,10 +31,12 @@ export class LiveSyncService {
 
     // Connect to the WebSocket hub endpoint via our proxy configuration
     this.connection = new HubConnectionBuilder()
-      .withUrl('/hubs/tms')
+      .withUrl('/hubs/tms', {
+        withCredentials: true
+      })
       .withAutomaticReconnect([0, 2000, 10000, 30000])
       .build();
-
+      
     // Listen for the strongly-typed backend event broadcast
     this.connection.on(
       'ReceiveEnrollmentStatusUpdated',

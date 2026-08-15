@@ -17,6 +17,8 @@ export class GradeService {
   constructor(private http: HttpClient) {}
 
   postGrade(payload: GradePayload): Observable<{ id: string; success: boolean }> {
-    return this.http.post<{ id: string; success: boolean }>('/api/grades', payload);
+    return this.http.post<{ id: string; success: boolean }>('/api/grades', payload, { 
+      withCredentials: true 
+    });
   }
 }

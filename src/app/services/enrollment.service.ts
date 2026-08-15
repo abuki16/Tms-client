@@ -8,10 +8,12 @@ import { Enrollment } from '../models/enrollment.model';
 })
 export class EnrollmentService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:5049/api/v2/enrollments';
+  private baseUrl = '/api/v2/enrollments';
 
   getAll(): Observable<Enrollment[]> {
-    return this.http.get<Enrollment[]>(this.baseUrl);
+    return this.http.get<Enrollment[]>(this.baseUrl, { 
+      withCredentials: true 
+    });
   }
 
   // Updated to accept courseCode (string) and map to PascalCase for the C# backend command
@@ -20,11 +22,14 @@ export class EnrollmentService {
       StudentId: data.studentId,
       CourseCode: data.courseCode
     };
-    return this.http.post<Enrollment>(this.baseUrl, backendPayload);
+    return this.http.post<Enrollment>(this.baseUrl, backendPayload, { 
+      withCredentials: true 
+    });
   }
 
-  // In enrollment.service.ts
-approve(id: number): Observable<void> {
-  return this.http.post<void>(`${this.baseUrl}/${id}/approve`, {});
-}
+  approve(id: number | string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/approve`, {}, { 
+      withCredentials: true 
+    });
+  }
 }

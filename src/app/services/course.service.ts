@@ -16,6 +16,7 @@ export class CourseService {
     return this.http
       .get<PagedResponse<Course>>(this.baseUrl, {
         params: { page: page.toString(), pageSize: pageSize.toString() },
+        withCredentials: true,
       })
       .pipe(
         // Map to 'items' based on your PagedResponse interface contract
@@ -24,6 +25,14 @@ export class CourseService {
   }
 
   getById(id: string) {
-    return this.http.get<CourseDetail>(`${this.baseUrl}/${id}`);
+    return this.http.get<CourseDetail>(`${this.baseUrl}/${id}`, {
+      withCredentials: true,
+    });
+  }
+
+  delete(id: number) {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
+      withCredentials: true,
+    });
   }
 }
