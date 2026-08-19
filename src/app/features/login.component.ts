@@ -13,8 +13,8 @@ import { AuthService, LoginRequest } from '../services/auth.service';
       <h2>TMS Login</h2>
       <form (submit)="onLogin($event)">
         <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Username:</label>
-          <input type="text" [(ngModel)]="credentials.username" name="username" required style="width: 100%; padding: 8px;" />
+          <label style="display: block; margin-bottom: 5px;">Email:</label>
+          <input type="email" [(ngModel)]="credentials.email" name="email" required style="width: 100%; padding: 8px;" />
         </div>
         <div style="margin-bottom: 15px;">
           <label style="display: block; margin-bottom: 5px;">Password:</label>
@@ -33,7 +33,7 @@ export class LoginComponent {
   private router = inject(Router);
 
   credentials: LoginRequest = {
-    username: '',
+    email: '',
     password: ''
   };
 
@@ -43,10 +43,9 @@ export class LoginComponent {
     event.preventDefault();
     try {
       await this.authService.login(this.credentials);
-      // Redirect to dashboard upon successful login & cookie setting
       this.router.navigate(['/dashboard']);
     } catch (err) {
-      this.errorMessage = 'Invalid username or password.';
+      this.errorMessage = 'Invalid email or password.';
     }
   }
 }
