@@ -1,5 +1,6 @@
 import { Routes } from "@angular/router";
-
+import { roleGuard } from './guards/role.guard';
+import { AdminCourseListComponent } from './components/admin-course-list/admin-course-list.component';
 export const routes: Routes = [
   {
     path: "login",
@@ -21,6 +22,11 @@ export const routes: Routes = [
       import("./features/instructor-dashboard/instructor-dashboard.component").then(
         (m) => m.InstructorDashboardComponent,
       ),
+  },
+  {
+    path: 'admin/courses',
+    component: AdminCourseListComponent,
+    canActivate: [roleGuard('Admin')]
   },
   {
     path: "courses/:id",
