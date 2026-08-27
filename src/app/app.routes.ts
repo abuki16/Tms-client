@@ -1,6 +1,8 @@
 import { Routes } from "@angular/router";
 import { roleGuard } from './guards/role.guard';
 import { AdminCourseListComponent } from './components/admin-course-list/admin-course-list.component';
+import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
+
 export const routes: Routes = [
   {
     path: "login",
@@ -8,6 +10,10 @@ export const routes: Routes = [
       import("./features/login/login.component").then(
         (m) => m.LoginComponent,
       ),
+  },
+  {
+    path: "unauthorized",
+    component: UnauthorizedComponent,
   },
   {
     path: "dashboard",
@@ -22,6 +28,15 @@ export const routes: Routes = [
       import("./features/instructor-dashboard/instructor-dashboard.component").then(
         (m) => m.InstructorDashboardComponent,
       ),
+    canActivate: [roleGuard('Instructor')]
+  },
+  {
+    path: "admin-dashboard",
+    loadComponent: () =>
+      import("./features/admin-dashboard/admin-dashboard.component").then(
+        (m) => m.AdminDashboardComponent,
+      ),
+    canActivate: [roleGuard('Admin')]
   },
   {
     path: 'admin/courses',
@@ -48,13 +63,15 @@ export const routes: Routes = [
       import("./features/enrollment-list/enrollment-list.component").then(
         (m) => m.EnrollmentListComponent,
       ),
+    canActivate: [roleGuard('Instructor')]
   },
   {
     path: 'grade-submission',
     loadComponent: () =>
       import('./features/grade-submission/grade-submission.component')
-        .then(m => m.GradeSubmissionComponent)
+        .then(m => m.GradeSubmissionComponent),
+    canActivate: [roleGuard('Instructor')]
   },
-  
   { path: "", redirectTo: "login", pathMatch: "full" },
+  { path: "**", redirectTo: "login" }
 ];

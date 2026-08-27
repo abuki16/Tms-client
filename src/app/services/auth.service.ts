@@ -37,7 +37,7 @@ export class AuthService {
 
   async login(credentials: LoginRequest): Promise<void> {
     const res = await firstValueFrom(
-      this.http.post<AuthResponse>('/api/auth/login', credentials)
+      this.http.post<AuthResponse>('/api/v1/auth/login', credentials)
     );
     
     // Store access token in memory signal

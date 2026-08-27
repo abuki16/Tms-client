@@ -43,7 +43,18 @@ export class LoginComponent {
     event.preventDefault();
     try {
       await this.authService.login(this.credentials);
-      this.router.navigate(['/dashboard']);
+      
+      // Check the logged-in user's role and redirect dynamically
+      const user = this.authService.currentUser();
+      
+      if (user?.role === 'Admin') {
+        this.router.navigate(['/admin-dashboard']);
+      } else if (user?.role === 'Instructor') {
+        this.router.navigate(['/instructor-dashboard']);
+      } else {
+        this.router.navigate(['/dashboard']); // Student default
+      }
+      
     } catch (err) {
       this.errorMessage = 'Invalid email or password.';
     }

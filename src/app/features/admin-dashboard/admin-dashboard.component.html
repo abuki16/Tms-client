@@ -1,0 +1,63 @@
+<p>admin-dashboard works!</p>
+<div class="admin-dashboard-container">
+  
+  <!-- Header & Quick Actions -->
+  <div class="dashboard-header">
+    <div class="title-group">
+      <h1>Admin Command Center</h1>
+      <p class="subtitle">System oversight, enrollment authorizations, and course management.</p>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh Data</button>
+      <a routerLink="/admin/courses" class="btn-primary">📚 Manage Courses</a>
+    </div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-value">{{ store.entities().length }}</span>
+      <span class="kpi-label">Total System Enrollments</span>
+    </div>
+    <div class="kpi-card pending" [class.highlight]="store.pendingCount() > 0">
+      <span class="kpi-value">{{ store.pendingCount() }}</span>
+      <span class="kpi-label">Pending Approval Queue</span>
+    </div>
+  </div>
+
+  <!-- Actionable Pending Approvals Section -->
+  <div class="section-card">
+    <h3>Pending Enrollment Requests</h3>
+    
+    @if (pendingEnrollments.length > 0) {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course Code</th>
+              <th>Requested Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of pendingEnrollments; track item.id) {
+              <tr>
+                <td>{{ item.studentName || 'Student ID: ' + item.studentId }}</td>
+                <td>{{ item.courseCode || 'Course ID: ' + item.courseId }}</td>
+                <td>{{ item.enrolledAt | date:'mediumDate' }}</td>
+                <td>
+                  <button class="btn-success-sm" (click)="updateStatus(item.id, 'Approved')">Approve</button>
+                  <button class="btn-danger-sm" (click)="updateStatus(item.id, 'Rejected')">Reject</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="empty-state">No pending enrollment requests require your authorization right now.</p>
+    }
+  </div>
+
+</div>

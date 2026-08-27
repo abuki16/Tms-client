@@ -1,27 +1,22 @@
-<!-- Renders instantly on any connection speed -->
-<div class="dashboard-header">
-  <h1>Instructor Command Center</h1>
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <span class="kpi-value">{{ store.entities().length }}</span>
-      <span class="kpi-label">Total Enrollments</span>
+<div class="command-center-container">
+  
+  <!-- Header & Quick Actions -->
+  <div class="dashboard-header">
+    <div class="title-group">
+      <h1>Instructor Command Center</h1>
+      <p class="subtitle">Manage course delivery, student progress, and grade submissions.</p>
     </div>
-    <div class="kpi-card pending">
-      <span class="kpi-value">{{ store.pendingCount() }}</span>
-      <span class="kpi-label">Pending Approval</span>
+    <div class="action-buttons">
+      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh Data</button>
+      <a routerLink="/grade-submission" class="btn-primary">📝 Submit Grades</a>
+      <a routerLink="/admin/courses" class="btn-outline">📚 Manage Courses</a>
     </div>
   </div>
-</div>
 
-<!-- DEFERRED UI: The chart code lives in a separate .js chunk file -->
-<div class="chart-section">
-  @defer (on viewport; prefetch on idle(500)) {
-    <tms-analytics-chart [data]="store.entities()" />
-  } @placeholder {
-    <div class="skeleton-chart">Scroll down to view analytics...</div>
-  } @loading (minimum 500ms) {
-    <div class="spinner">Downloading chart engine...</div>
-  } @error {
-    <p>Failed to load chart. Check your connection.</p>
-  }
+  <!-- Instructor Teaching Focus Card -->
+  <div class="section-card">
+    <h3>Welcome to your Teaching Portal</h3>
+    <p>Use the action buttons above to submit semester grades or review your assigned course curriculum. Student enrollment approvals are managed directly by system administrators.</p>
+  </div>
+
 </div>
