@@ -2,7 +2,6 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AssessmentService } from '../../services/assessment.service';
-import { AuthService } from '../../services/auth.service';
 import { 
   AssessmentResponseDto, 
   AssessmentResultResponseDto, 
@@ -11,23 +10,22 @@ import {
 } from '../../models/assessment.model';
 
 @Component({
-  selector: 'tms-grade-submission',
+  selector: 'tms-instructor-grading',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './grade-submission.component.html',
-  styleUrl: './grade-submission.component.scss'
+  templateUrl: './instructor-grading.component.html',
+  styleUrl: './instructor-grading.component.scss'
 })
-export class GradeSubmissionComponent implements OnInit {
+export class InstructorGradingComponent implements OnInit {
   private assessmentService = inject(AssessmentService);
-  private authService = inject(AuthService);
 
-  // Scoped strictly to the instructor's assigned course (e.g., Course ID 1)
   assignedCourseId: number = 1; 
   selectedAssessmentId: number | null = null;
 
   assessments = signal<AssessmentResponseDto[]>([]);
   results = signal<AssessmentResultResponseDto[]>([]);
   
+  // Payload matching Scalar API contract exactly
   newAssessment: CreateAssessmentRequest = { title: '', maxScore: 100, weight: 0.30 };
   newGrade: GradeStudentRequest = { title: '', scoreObtained: 0, weight: 0.30, studentId: 0 };
   
@@ -35,8 +33,6 @@ export class GradeSubmissionComponent implements OnInit {
   successMessage = '';
 
   ngOnInit() {
-    // If your backend or auth token provides the assigned course ID, load it here.
-    // Otherwise, it defaults to their single assigned course ID.
     this.loadAssessments();
   }
 
@@ -55,16 +51,42 @@ export class GradeSubmissionComponent implements OnInit {
     });
   }
 
+  toggleAssessment(assessmentId: number) {
+    if (this.selectedAssessmentId === assessmentId) {
+      this.selectedAssessmentId = null;
+      this.results.set([]);
+    } else {
+      this.selectedAssessmentId = assessmentId;
+      this.loadResults();
+    }
+  }
+
   onCreateAssessment() {
     this.assessmentService.createAssessment(this.assignedCourseId, this.newAssessment).subscribe({
       next: () => {
         this.successMessage = 'Assessment definition created successfully!';
+        this.errorMessage = '';
         this.newAssessment = { title: '', maxScore: 100, weight: 0.30 };
         this.loadAssessments();
       },
       error: (err) => {
         this.errorMessage = err.error?.detail || 'Failed to create assessment definition.';
+        this.successMessage = '';
       }
+    });
+  }
+
+  deleteAssessment(assessmentId: number) {
+    if (!confirm('Are you sure you want to delete this assessment definition?')) return;
+    this.assessmentService.deleteAssessment(this.assignedCourseId, assessmentId).subscribe({
+      next: () => {
+        if (this.selectedAssessmentId === assessmentId) {
+          this.selectedAssessmentId = null;
+          this.results.set([]);
+        }
+        this.loadAssessments();
+      },
+      error: (err) => alert(err.error?.detail || 'Failed to delete assessment.')
     });
   }
 
@@ -72,12 +94,14 @@ export class GradeSubmissionComponent implements OnInit {
     if (!this.selectedAssessmentId) return;
     this.assessmentService.gradeStudent(this.selectedAssessmentId, this.newGrade).subscribe({
       next: () => {
-        this.successMessage = 'Student graded successfully!';
+        this.successMessage = 'Student grade submitted successfully!';
+        this.errorMessage = '';
         this.newGrade = { title: '', scoreObtained: 0, weight: 0.30, studentId: 0 };
         this.loadResults();
       },
       error: (err) => {
-        this.errorMessage = err.error?.detail || 'Failed to save grade record.';
+        this.errorMessage = err.error?.detail || 'Failed to submit student grade.';
+        this.successMessage = '';
       }
     });
   }
@@ -85,7 +109,7 @@ export class GradeSubmissionComponent implements OnInit {
   updateScore(res: AssessmentResultResponseDto) {
     if (!this.selectedAssessmentId) return;
     this.assessmentService.updateStudentScore(this.selectedAssessmentId, res.id, res.scoreObtained).subscribe({
-      next: () => alert('Score updated successfully!'),
+      next: () => alert('Student score updated successfully!'),
       error: (err) => alert(err.error?.detail || 'Failed to update score.')
     });
   }

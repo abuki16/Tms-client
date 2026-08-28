@@ -1,0 +1,81 @@
+<div class="admin-panel-container">
+  <div class="panel-header">
+    <h2>Certificate Governance Portal</h2>
+    <p class="subtitle">Issue official course completion certificates and manage revocations.</p>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert error">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert success">{{ successMessage }}</div>
+  }
+
+  <div class="grid-layout">
+    <!-- Issue Certificate Card -->
+    <div class="card">
+      <h3>Issue New Certificate</h3>
+      <form (submit)="$event.preventDefault(); onIssueCertificate()" class="form-stack mt-3">
+        
+        <div class="form-group">
+          <label>Student ID:</label>
+          <input type="number" [(ngModel)]="newCert.studentId" name="studentId" required class="form-control" placeholder="e.g., 1" />
+        </div>
+
+        <div class="form-group">
+          <label>Course ID:</label>
+          <input type="number" [(ngModel)]="newCert.courseId" name="courseId" required class="form-control" placeholder="e.g., 10" />
+        </div>
+
+        <div class="form-group">
+          <label>Serial Number:</label>
+          <input type="text" [(ngModel)]="newCert.serialNumber" name="serialNumber" required class="form-control" placeholder="CERT-2026-XXXX" />
+        </div>
+
+        <button type="submit" class="btn-primary mt-2">Issue Certificate</button>
+      </form>
+    </div>
+
+    <!-- Lookup Student Certificates Card -->
+    <div class="card">
+      <h3>Student Certificate Lookup</h3>
+      <div class="search-box mt-3">
+        <div class="form-group" style="flex: 1;">
+          <input type="number" [(ngModel)]="searchStudentId" name="searchStudentId" placeholder="Enter Student ID" class="form-control" />
+        </div>
+        <button type="button" class="btn-secondary" (click)="onSearchStudentCertificates()">Search</button>
+      </div>
+
+      <div class="mt-3">
+        @if (studentCertificates().length > 0) {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Serial</th>
+                  <th>Course</th>
+                  <th>Issued Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cert of studentCertificates(); track cert.id) {
+                  <tr>
+                    <td>{{ cert.serialNumber }}</td>
+                    <td>{{ cert.courseTitle }}</td>
+                    <td>{{ cert.issuedAt | date:'mediumDate' }}</td>
+                    <td>
+                      <button class="btn-danger-sm" (click)="onRevoke(cert.id)">Revoke</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="empty-state">No certificates found for this student ID.</p>
+        }
+      </div>
+    </div>
+  </div>
+</div>

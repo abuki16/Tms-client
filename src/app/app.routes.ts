@@ -44,6 +44,20 @@ export const routes: Routes = [
     canActivate: [roleGuard('Admin')]
   },
   {
+    path: 'admin/users',
+    loadComponent: () =>
+      import('./features/user-management/user-management.component')
+        .then(m => m.UserManagementComponent),
+    canActivate: [roleGuard('Admin')]
+  },
+  {
+    path: 'admin/certificates',
+    loadComponent: () =>
+      import('./features/certificate-management/certificate-management.component')
+        .then(m => m.CertificateManagementComponent),
+    canActivate: [roleGuard('Admin')]
+  },
+  {
     path: "courses/:id",
     loadComponent: () =>
       import("./features/course-detail/course-detail.component").then(
@@ -63,13 +77,20 @@ export const routes: Routes = [
       import("./features/enrollment-list/enrollment-list.component").then(
         (m) => m.EnrollmentListComponent,
       ),
-    canActivate: [roleGuard('Instructor')]
+    canActivate: [roleGuard('Admin')]
   },
   {
     path: 'grade-submission',
     loadComponent: () =>
       import('./features/grade-submission/grade-submission.component')
         .then(m => m.GradeSubmissionComponent),
+    canActivate: [roleGuard('Instructor')]
+  },
+  {
+    path: 'instructor/grading',
+    loadComponent: () =>
+      import('./features/instructor-grading/instructor-grading.component')
+        .then(m => m.InstructorGradingComponent),
     canActivate: [roleGuard('Instructor')]
   },
   { path: "", redirectTo: "login", pathMatch: "full" },

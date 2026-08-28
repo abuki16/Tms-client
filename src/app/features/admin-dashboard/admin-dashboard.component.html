@@ -1,63 +1,78 @@
-<p>admin-dashboard works!</p>
 <div class="admin-dashboard-container">
   
   <!-- Header & Quick Actions -->
   <div class="dashboard-header">
     <div class="title-group">
       <h1>Admin Command Center</h1>
-      <p class="subtitle">System oversight, enrollment authorizations, and course management.</p>
+      <p class="subtitle">System oversight, enrollment authorizations, and academic governance.</p>
     </div>
     <div class="action-buttons">
-      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh Data</button>
-      <a routerLink="/admin/courses" class="btn-primary">📚 Manage Courses</a>
+      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh</button>
+      <a routerLink="/enrollments" class="btn-outline">👥 Enrollments</a>
+      <a routerLink="/admin/users" class="btn-secondary">👤 Users</a>
+      <a routerLink="/admin/certificates" class="btn-outline">📜 Certificates</a>
+      <a routerLink="/admin/courses" class="btn-primary">📚 Courses</a>
     </div>
   </div>
 
   <!-- KPI Row -->
   <div class="kpi-row">
     <div class="kpi-card">
-      <span class="kpi-value">{{ store.entities().length }}</span>
-      <span class="kpi-label">Total System Enrollments</span>
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-info">
+        <span class="kpi-value">{{ store.entities().length }}</span>
+        <span class="kpi-label">Total System Enrollments</span>
+      </div>
     </div>
     <div class="kpi-card pending" [class.highlight]="store.pendingCount() > 0">
-      <span class="kpi-value">{{ store.pendingCount() }}</span>
-      <span class="kpi-label">Pending Approval Queue</span>
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-info">
+        <span class="kpi-value">{{ store.pendingCount() }}</span>
+        <span class="kpi-label">Pending Approval Queue</span>
+      </div>
     </div>
   </div>
 
-  <!-- Actionable Pending Approvals Section -->
-  <div class="section-card">
-    <h3>Pending Enrollment Requests</h3>
-    
-    @if (pendingEnrollments.length > 0) {
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Course Code</th>
-              <th>Requested Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of pendingEnrollments; track item.id) {
-              <tr>
-                <td>{{ item.studentName || 'Student ID: ' + item.studentId }}</td>
-                <td>{{ item.courseCode || 'Course ID: ' + item.courseId }}</td>
-                <td>{{ item.enrolledAt | date:'mediumDate' }}</td>
-                <td>
-                  <button class="btn-success-sm" (click)="updateStatus(item.id, 'Approved')">Approve</button>
-                  <button class="btn-danger-sm" (click)="updateStatus(item.id, 'Rejected')">Reject</button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+  <!-- Management Overview & Quick Launch Grid -->
+  <div class="dashboard-grid">
+    <div class="section-card">
+      <h3>Administrative Overview</h3>
+      <p>Welcome to the central command hub. Use the quick action shortcuts above or navigation cards below to manage course curricula, provision user credentials, oversee enrollments, or handle official certificate generation.</p>
+    </div>
+
+    <div class="section-card quick-links-card">
+      <h3>Quick Modules</h3>
+      <div class="quick-links-grid">
+        <a routerLink="/admin/courses" class="quick-link-item">
+          <span class="ql-icon">📚</span>
+          <div>
+            <strong>Course Management</strong>
+            <small>Add, update, or remove curricula</small>
+          </div>
+        </a>
+        <a routerLink="/admin/users" class="quick-link-item">
+          <span class="ql-icon">👤</span>
+          <div>
+            <strong>User Provisioning</strong>
+            <small>Manage student, instructor, & admin accounts</small>
+          </div>
+        </a>
+        <a routerLink="/admin/certificates" class="quick-link-item">
+          <span class="ql-icon">📜</span>
+          <div>
+            <strong>Certificate Governance</strong>
+            <small>Issue and revoke academic certificates</small>
+          </div>
+        </a>
+        <a routerLink="/enrollments" class="quick-link-item">
+          <span class="ql-icon">👥</span>
+          <div>
+            <strong>Enrollment Oversight</strong>
+            <small>Inspect active course registrations</small>
+          </div>
+        </a>
       </div>
-    } @else {
-      <p class="empty-state">No pending enrollment requests require your authorization right now.</p>
-    }
+    </div>
   </div>
 
 </div>

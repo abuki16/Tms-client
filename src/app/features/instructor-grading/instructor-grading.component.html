@@ -1,0 +1,119 @@
+<div class="grading-container">
+  <h2>Instructor Assessment & Grading Portal</h2>
+
+  @if (errorMessage) {
+    <div class="alert error">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert success">{{ successMessage }}</div>
+  }
+
+  <!-- 1. Register New Assessment Form -->
+  <div class="card mb-4">
+    <h3>Register New Assessment</h3>
+    <form (submit)="$event.preventDefault(); onCreateAssessment()" class="inline-form">
+      <div class="form-group" style="flex: 2;">
+        <label>Title:</label>
+        <input type="text" [(ngModel)]="newAssessment.title" name="asmTitle" placeholder="e.g., Midterm Exam" required class="form-control" />
+      </div>
+      <div class="form-group" style="flex: 1;">
+        <label>Max Score:</label>
+        <input type="number" [(ngModel)]="newAssessment.maxScore" name="asmMax" placeholder="100" required class="form-control" />
+      </div>
+      <div class="form-group" style="flex: 1;">
+        <label>Weight:</label>
+        <input type="number" step="0.01" [(ngModel)]="newAssessment.weight" name="asmWeight" placeholder="0.30" required class="form-control" />
+      </div>
+      <div style="align-self: flex-end;">
+        <button type="submit" class="btn-primary">Register</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. Registered Assessments & Student Grading Section -->
+  <div class="card">
+    <h3>Course Assessments & Grade Submissions</h3>
+    
+    <div class="assessment-list">
+      @for (asm of assessments(); track asm.id) {
+        <div class="assessment-item-card" [class.active]="selectedAssessmentId === asm.id">
+          <div class="assessment-header">
+            <div>
+              <strong>{{ asm.title }}</strong> 
+              <span class="badge">Max: {{ asm.maxScore }}</span>
+              <span class="badge">Weight: {{ asm.weight }}</span>
+            </div>
+            <div class="actions">
+              <button class="btn-sm" [class.btn-primary]="selectedAssessmentId !== asm.id" [class.btn-secondary]="selectedAssessmentId === asm.id" (click)="toggleAssessment(asm.id)">
+                {{ selectedAssessmentId === asm.id ? 'Close Grading' : '📝 Grade Students' }}
+              </button>
+              <button class="btn-sm btn-danger" (click)="deleteAssessment(asm.id)">Delete</button>
+            </div>
+          </div>
+
+          <!-- Expanded Grading Section for this specific Assessment -->
+          @if (selectedAssessmentId === asm.id) {
+            <div class="grading-section mt-3">
+              <h4>Submit Grade for {{ asm.title }}</h4>
+              
+              <form (submit)="$event.preventDefault(); onGradeStudent()" class="grade-form-grid">
+                <div class="form-group">
+                  <label>Record Title:</label>
+                  <input type="text" [(ngModel)]="newGrade.title" name="gradeTitle" placeholder="e.g., Attempt 1" required class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Student ID:</label>
+                  <input type="number" [(ngModel)]="newGrade.studentId" name="studentId" placeholder="Student ID" required class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Score Obtained:</label>
+                  <input type="number" step="0.01" [(ngModel)]="newGrade.scoreObtained" name="scoreObtained" placeholder="Score" required class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Weight:</label>
+                  <input type="number" step="0.01" [(ngModel)]="newGrade.weight" name="gradeWeight" placeholder="Weight" required class="form-control" />
+                </div>
+                <div style="grid-column: 1 / -1;">
+                  <button type="submit" class="btn-success">Submit Grade Record</button>
+                </div>
+              </form>
+
+              <!-- Results Table -->
+              <table class="data-table mt-3">
+                <thead>
+                  <tr>
+                    <th>Student Name</th>
+                    <th>Record Title</th>
+                    <th>Score Obtained</th>
+                    <th>Weight</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (res of results(); track res.id) {
+                    <tr>
+                      <td>{{ res.studentName }}</td>
+                      <td>{{ res.title }}</td>
+                      <td>
+                        <input type="number" [(ngModel)]="res.scoreObtained" class="form-control-sm" />
+                      </td>
+                      <td>{{ res.weight }}</td>
+                      <td>
+                        <button class="btn-sm btn-success" (click)="updateScore(res)">Save</button>
+                        <button class="btn-sm btn-danger" (click)="deleteResult(res.id)">Delete</button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="empty-state">No student grades submitted for this assessment yet.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="empty-state">No assessments registered for this course yet. Use the form above to create one.</p>
+      }
+    </div>
+  </div>
+</div>

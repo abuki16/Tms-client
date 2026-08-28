@@ -50,7 +50,7 @@ export class LoginComponent {
 
       // Dynamic role-based redirection
       if (role === 'Admin') {
-        this.router.navigate(['/admin/courses']);
+        this.router.navigate(['/admin-dashboard']); // Points to your new Admin Command Center!
       } else if (role === 'Instructor') {
         this.router.navigate(['/instructor-dashboard']);
       } else {

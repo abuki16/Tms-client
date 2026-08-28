@@ -1,61 +1,101 @@
-<div class="max-w-md mx-auto my-8">
-  <mat-card class="shadow-xl rounded-2xl bg-slate-900 border border-slate-800 text-slate-100 p-6">
-    <mat-card-header class="mb-4">
-      <mat-card-title class="text-xl font-bold text-slate-100">Grade Submission Form</mat-card-title>
-      <mat-card-subtitle class="text-slate-400 text-sm">Instructor Midterm Grading</mat-card-subtitle>
-    </mat-card-header>
+<div class="grading-container">
+  <h2>Instructor Assessment & Grading Portal</h2>
 
-    <form [formGroup]="gradeForm" (ngSubmit)="onSubmit()">
-      <mat-card-content class="space-y-4">
-        
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Student ID</mat-label>
-          <input matInput type="number" formControlName="studentId" />
-          @if (gradeForm.controls.studentId.hasError('required')) {
-            <mat-error>Student ID is required</mat-error>
+  @if (errorMessage) {
+    <div class="alert error">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert success">{{ successMessage }}</div>
+  }
+
+  <!-- Course Selector & Assessment Setup -->
+  <div class="card-grid">
+    <div class="card">
+      <h3>1. Assigned Course & Assessments</h3>
+      
+      <!-- Locked Assigned Course Indicator -->
+      <div class="assigned-course-badge" style="padding: 10px; background: #f1f3f5; border-radius: 6px; margin-bottom: 15px;">
+        <strong>Active Course ID:</strong> {{ assignedCourseId }} <span style="color: #6c757d; font-size: 0.85rem;">(Assigned Teaching Unit)</span>
+      </div>
+
+      <div class="form-group">
+        <label>Assessment Definition:</label>
+        <select [(ngModel)]="selectedAssessmentId" (change)="loadResults()" class="form-control">
+          <option [value]="null">-- Choose Assessment --</option>
+          @for (asm of assessments(); track asm.id) {
+            <option [value]="asm.id">{{ asm.title }} (Max: {{ asm.maxScore }}, Weight: {{ asm.weight }})</option>
           }
-        </mat-form-field>
+        </select>
+      </div>
+    </div>
 
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Course ID</mat-label>
-          <input matInput type="number" formControlName="courseId" />
-          @if (gradeForm.controls.courseId.hasError('required')) {
-            <mat-error>Course ID is required</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Score (0-100)</mat-label>
-          <input matInput type="number" formControlName="score" />
-          @if (gradeForm.controls.score.hasError('min') || gradeForm.controls.score.hasError('max')) {
-            <mat-error>Score must be between 0 and 100</mat-error>
-          }
-        </mat-form-field>
-
-        @if (isSubmitting) {
-          <div class="flex justify-center py-3">
-            <mat-spinner diameter="32"></mat-spinner>
+    <!-- Create Assessment Definition Form -->
+    <div class="card">
+      <h3>Create Assessment Definition</h3>
+      <form (submit)="$event.preventDefault(); onCreateAssessment()">
+        <div class="form-group">
+          <label>Title (e.g., Midterm Exam):</label>
+          <input type="text" [(ngModel)]="newAssessment.title" name="asmTitle" required class="form-control" />
+        </div>
+        <div class="form-group-row">
+          <div>
+            <label>Max Score:</label>
+            <input type="number" [(ngModel)]="newAssessment.maxScore" name="asmMax" required class="form-control" />
           </div>
-        }
-
-        @if (submissionStatus) {
-          <div class="mt-4 p-3 rounded-lg bg-slate-800 text-sky-400 text-sm font-medium border border-slate-700">
-            {{ submissionStatus }}
+          <div>
+            <label>Weight (e.g. 0.3):</label>
+            <input type="number" step="0.01" [(ngModel)]="newAssessment.weight" name="asmWeight" required class="form-control" />
           </div>
-        }
+        </div>
+        <button type="submit" class="btn-primary">Add Assessment</button>
+      </form>
+    </div>
+  </div>
 
-      </mat-card-content>
+  <!-- Student Grading Section -->
+  @if (selectedAssessmentId) {
+    <div class="card mt-4">
+      <h3>2. Grade Student Results</h3>
+      
+      <!-- Quick Grade Form -->
+      <form (submit)="$event.preventDefault(); onGradeStudent()" class="grade-form">
+        <input type="text" [(ngModel)]="newGrade.title" name="gradeTitle" placeholder="Result Title" required class="form-control" />
+        <input type="number" [(ngModel)]="newGrade.studentId" name="studentId" placeholder="Student ID" required class="form-control" />
+        <input type="number" [(ngModel)]="newGrade.scoreObtained" name="scoreObtained" placeholder="Score Obtained" required class="form-control" />
+        <input type="number" step="0.01" [(ngModel)]="newGrade.weight" name="gradeWeight" placeholder="Weight" required class="form-control" />
+        <button type="submit" class="btn-success">Submit Grade</button>
+      </form>
 
-      <mat-card-actions class="mt-4">
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="gradeForm.invalid || isSubmitting"
-          class="w-full py-3 text-base font-semibold">
-          Submit Final Grade
-        </button>
-      </mat-card-actions>
-    </form>
-  </mat-card>
+      <!-- Results Table -->
+      <table class="data-table mt-3">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Title</th>
+            <th>Score Obtained</th>
+            <th>Weight</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (res of results(); track res.id) {
+            <tr>
+              <td>{{ res.studentName }}</td>
+              <td>{{ res.title }}</td>
+              <td>
+                <input type="number" [(ngModel)]="res.scoreObtained" class="form-control-sm" />
+              </td>
+              <td>{{ res.weight }}</td>
+              <td>
+                <button class="btn-sm btn-success" (click)="updateScore(res)">Save</button>
+                <button class="btn-sm btn-danger" (click)="deleteResult(res.id)">Delete</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty-state">No student results recorded for this assessment yet.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>

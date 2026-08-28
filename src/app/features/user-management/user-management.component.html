@@ -1,0 +1,53 @@
+<div class="admin-panel-container">
+  <div class="panel-header">
+    <h2>User Provisioning & Management</h2>
+    <p class="subtitle">Create new system accounts and assign user roles securely.</p>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert error">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert success">{{ successMessage }}</div>
+  }
+
+  <!-- Register New User Card -->
+  <div class="card mt-4">
+    <h3>Register New System User</h3>
+    <form (submit)="$event.preventDefault(); onRegisterUser()" class="user-form-grid mt-3">
+      
+      <div class="form-group">
+        <label>Email Address (Username):</label>
+        <input type="email" [(ngModel)]="newUser.email" name="email" placeholder="user@tms.com" required class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>Temporary Password:</label>
+        <input type="password" [(ngModel)]="newUser.password" name="password" placeholder="********" required class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>First Name:</label>
+        <input type="text" [(ngModel)]="newUser.firstName" name="firstName" placeholder="John" required class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>Last Name:</label>
+        <input type="text" [(ngModel)]="newUser.lastName" name="lastName" placeholder="Doe" required class="form-control" />
+      </div>
+
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label>Assign Role:</label>
+        <select [(ngModel)]="newUser.role" name="role" required class="form-control">
+          <option value="Student">Student</option>
+          <option value="Instructor">Instructor</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="form-actions" style="grid-column: 1 / -1; margin-top: 10px;">
+        <button type="submit" class="btn-primary">Create User Account</button>
+      </div>
+    </form>
+  </div>
+</div>
