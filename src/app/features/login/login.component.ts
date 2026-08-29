@@ -9,24 +9,229 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
-      <h2>TMS Login</h2>
-      <form (submit)="onLogin($event)">
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Email:</label>
-          <input type="email" [(ngModel)]="credentials.email" name="email" required style="width: 100%; padding: 8px;" />
+    <div class="login-wrapper">
+      <div class="login-card">
+        
+        <!-- Brand / Header -->
+        <div class="login-header">
+          <div class="logo-badge">🎓</div>
+          <h2>Welcome to TMS</h2>
+          <p class="subtitle">Sign in to access your portal</p>
         </div>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Password:</label>
-          <input type="password" [(ngModel)]="credentials.password" name="password" required style="width: 100%; padding: 8px;" />
+
+        <!-- Error Banner -->
+        @if (errorMessage) {
+          <div class="alert error">
+            <span>⚠️</span> {{ errorMessage }}
+          </div>
+        }
+
+        <!-- Form -->
+        <form (submit)="onLogin($event)" class="login-form">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-with-icon">
+              <span class="icon">✉️</span>
+              <input 
+                id="email"
+                type="email" 
+                [(ngModel)]="credentials.email" 
+                name="email" 
+                required 
+                placeholder="name@example.com" 
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-with-icon">
+              <span class="icon">🔒</span>
+              <input 
+                id="password"
+                type="password" 
+                [(ngModel)]="credentials.password" 
+                name="password" 
+                required 
+                placeholder="••••••••" 
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" [disabled]="isLoading">
+            @if (isLoading) {
+              <span class="spinner"></span> Signing in...
+            } @else {
+              Sign In
+            }
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <p>Training Management System &bull; Secure Portal</p>
         </div>
-        <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Login
-        </button>
-        <p *ngIf="errorMessage" style="color: red; margin-top: 10px;">{{ errorMessage }}</p>
-      </form>
+
+      </div>
     </div>
-  `
+  `,
+  styles: [`
+    .login-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      font-family: inherit;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
+
+      .logo-badge {
+        font-size: 2.5rem;
+        background: #f0fdf4;
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 16px auto;
+        border: 1px solid #dcfce7;
+      }
+
+      h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 6px 0;
+      }
+
+      .subtitle {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0;
+      }
+    }
+
+    .alert.error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .login-form {
+      .form-group {
+        margin-bottom: 20px;
+
+        label {
+          display: block;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #334155;
+          margin-bottom: 8px;
+        }
+
+        .input-with-icon {
+          position: relative;
+          display: flex;
+          align-items: center;
+
+          .icon {
+            position: absolute;
+            left: 14px;
+            font-size: 1rem;
+            pointer-events: none;
+          }
+
+          .form-control {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: all 0.2s ease;
+
+            &:focus {
+              outline: none;
+              border-color: #2563eb;
+              background: #ffffff;
+              box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            }
+
+            &::placeholder {
+              color: #94a3b8;
+            }
+          }
+        }
+      }
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      margin-top: 10px;
+
+      &:hover {
+        background-color: #1d4ed8;
+      }
+
+      &:active {
+        transform: scale(0.99);
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 30px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 20px;
+
+      p {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+  `]
 })
 export class LoginComponent {
   private authService = inject(AuthService);
@@ -38,26 +243,32 @@ export class LoginComponent {
   };
 
   errorMessage = '';
+  isLoading = false;
 
   async onLogin(event: Event) {
     event.preventDefault();
+    this.errorMessage = '';
+    this.isLoading = true;
+
     try {
       await this.authService.login(this.credentials);
       
-      // Fetch the role from the current user state populated during login
       const user = this.authService.currentUser();
       const role = user?.role;
 
-      // Dynamic role-based redirection
       if (role === 'Admin') {
-        this.router.navigate(['/admin-dashboard']); // Points to your new Admin Command Center!
+        this.router.navigate(['/admin-dashboard']);
       } else if (role === 'Instructor') {
         this.router.navigate(['/instructor-dashboard']);
+      } else if (role === 'Registrar') {
+        this.router.navigate(['/admin/registrar-analytics']);
       } else {
-        this.router.navigate(['/dashboard']); // Student dashboard default
+        this.router.navigate(['/dashboard']);
       }
     } catch (err) {
-      this.errorMessage = 'Invalid email or password.';
+      this.errorMessage = 'Invalid email or password. Please try again.';
+    } finally {
+      this.isLoading = false;
     }
   }
 }

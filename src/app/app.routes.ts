@@ -43,6 +43,13 @@ export const routes: Routes = [
     component: AdminCourseListComponent,
     canActivate: [roleGuard('Admin')]
   },
+  // {
+  //   path: 'admin/course-management',
+  //   loadComponent: () =>
+  //     import('./features/course-management/course-management.component')
+  //       .then(m => m.CourseManagementComponent),
+  //   canActivate: [roleGuard('Admin')]
+  // },
   {
     path: 'admin/users',
     loadComponent: () =>
@@ -55,6 +62,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/certificate-management/certificate-management.component')
         .then(m => m.CertificateManagementComponent),
+    canActivate: [roleGuard('Admin')]
+  },
+  {
+    path: 'admin/registrar-analytics',
+    loadComponent: () =>
+      import('./features/registrar-dashboard/registrar-dashboard.component')
+        .then(m => m.RegistrarDashboardComponent),
     canActivate: [roleGuard('Admin')]
   },
   {

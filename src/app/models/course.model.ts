@@ -33,3 +33,17 @@ export interface CourseLink {
 export interface CourseDetail extends Course {
   links: readonly CourseLink[];
 }
+
+/** Request payload for creating a new course. */
+export interface CreateCourseRequest {
+  code: string;
+  title: string;
+  maxCapacity: number;
+}
+
+/** Request payload for updating an existing course. */
+export interface UpdateCourseRequest {
+  code: string;
+  title: string;
+  maxCapacity: number;
+}

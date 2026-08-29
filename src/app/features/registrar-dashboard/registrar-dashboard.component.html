@@ -1,0 +1,94 @@
+<div class="registrar-container">
+  
+  <!-- Header & Quick Actions -->
+  <div class="dashboard-header">
+    <div class="title-group">
+      <h1>Registrar Analytics Dashboard</h1>
+      <p class="subtitle">System academic metrics, enrollment rankings, and student performance oversight.</p>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh Analytics</button>
+      <a routerLink="/dashboard" class="btn-outline">👀 Student View</a>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert error">{{ errorMessage() }}</div>
+  }
+
+  <!-- KPI Metrics Row (Query 1) -->
+  <div class="kpi-row">
+    <div class="kpi-card highlight">
+      <div class="kpi-value">
+        @if (isLoading()) { <span>...</span> } @else { {{ highGpaCount() }} }
+      </div>
+      <div class="kpi-label">Active Students with GPA &ge; 3.0</div>
+    </div>
+  </div>
+
+  <!-- Analytics Grid -->
+  <div class="analytics-grid">
+    
+    <!-- Query 2: Courses Sorted by Enrollments -->
+    <div class="section-card">
+      <h3>Courses by Enrollment Volume</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Course Title</th>
+            <th>Enrollments</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (course of coursesByEnrollment(); track course.title) {
+            <tr>
+              <td>{{ course.title }}</td>
+              <td><strong>{{ course.enrollmentCount }}</strong></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="2" class="empty-state">No enrollment data available.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Query 3: Average GPA per Course -->
+    <div class="section-card">
+      <h3>Average GPA per Course</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Course Title</th>
+            <th>Average GPA</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of averageGpaPerCourse(); track item.courseTitle) {
+            <tr>
+              <td>{{ item.courseTitle }}</td>
+              <td><span class="badge-gpa">{{ item.averageGpa | number:'1.2-2' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="2" class="empty-state">No GPA data available.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Query 4: Unenrolled Students -->
+  <div class="section-card mt-4">
+    <h3>Students with Zero Enrollments</h3>
+    @if (unenrolledStudents().length > 0) {
+      <div class="badge-container">
+        @for (studentName of unenrolledStudents(); track studentName) {
+          <span class="student-badge">👤 {{ studentName }}</span>
+        }
+      </div>
+    } @else {
+      <p class="empty-state">All active students are currently enrolled in at least one course.</p>
+    }
+  </div>
+
+</div>
