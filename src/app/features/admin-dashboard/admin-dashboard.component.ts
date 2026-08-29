@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnrollmentStore } from '../../store/enrollment.store';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'tms-admin-dashboard',
@@ -12,6 +13,7 @@ import { EnrollmentStore } from '../../store/enrollment.store';
 })
 export class AdminDashboardComponent implements OnInit {
   store = inject(EnrollmentStore);
+  authService = inject(AuthService); // Injected AuthService for template logout call
 
   ngOnInit() {
     this.store.loadEnrollments();

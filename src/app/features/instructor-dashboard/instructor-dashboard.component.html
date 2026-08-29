@@ -4,18 +4,30 @@
   <div class="dashboard-header">
     <div class="title-group">
       <h1>Instructor Command Center</h1>
-      <p class="subtitle">Manage course delivery, student progress, and grade submissions.</p>
+      <p class="subtitle">Manage course delivery, student progress, and grade submissions seamlessly.</p>
     </div>
     <div class="action-buttons">
-      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh Data</button>
-      <a routerLink="/instructor/grading" class="btn-primary">📝 Assessment & Grade Portal</a>
+      <button class="btn-secondary" (click)="refreshData()">
+        <span class="icon">🔄</span> Refresh Data
+      </button>
+      <a routerLink="/instructor/grading" class="btn-primary">
+        <span class="icon">📝</span> Assessment Portal
+      </a>
+      <button class="btn-logout" (click)="authService.logout()">
+        <span class="icon">🚪</span> Logout
+      </button>
     </div>
   </div>
 
   <!-- Instructor Teaching Focus Card -->
-  <div class="section-card">
-    <h3>Welcome to your Teaching Portal</h3>
-    <p>Use the action buttons above to register course assessments, submit and manage semester grades, or review course delivery tools. Enrollment approvals and user management are handled securely by system administrators.</p>
+  <div class="section-card welcome-card">
+    <div class="welcome-content">
+      <div class="welcome-icon">🎓</div>
+      <div>
+        <h3>Welcome to your Teaching Portal</h3>
+        <p>Use the action buttons above to register course assessments, submit and manage semester grades, or review course delivery tools. Enrollment approvals and user management are handled securely by system administrators.</p>
+      </div>
+    </div>
   </div>
 
 </div>

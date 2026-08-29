@@ -1,22 +1,26 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService, LoginRequest } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="login-wrapper">
       <div class="login-card">
         
         <!-- Brand / Header -->
         <div class="login-header">
-          <div class="logo-badge">🎓</div>
-          <h2>Welcome to TMS</h2>
-          <p class="subtitle">Sign in to access your portal</p>
+          <div class="logo-badge">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <h2>Training Management System</h2>
+          <p class="subtitle">Sign in to your professional portal</p>
         </div>
 
         <!-- Error Banner -->
@@ -69,8 +73,13 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
           </button>
         </form>
 
+        <!-- Registration Prompt -->
+        <div class="signup-prompt">
+          <p>Don't have an account? <a routerLink="/register">Sign up</a></p>
+        </div>
+
         <div class="login-footer">
-          <p>Training Management System &bull; Secure Portal</p>
+          <p>TMS Core &bull; Secure Portal</p>
         </div>
 
       </div>
@@ -102,20 +111,26 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
       margin-bottom: 30px;
 
       .logo-badge {
-        font-size: 2.5rem;
-        background: #f0fdf4;
-        width: 64px;
-        height: 64px;
+        width: 56px;
+        height: 56px;
+        background: #eef2ff;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
+        border-radius: 14px;
         margin: 0 auto 16px auto;
-        border: 1px solid #dcfce7;
+        border: 1px solid #e0e7ff;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1);
+
+        svg {
+          width: 28px;
+          height: 28px;
+          color: #4f46e5;
+        }
       }
 
       h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #0f172a;
         margin: 0 0 6px 0;
@@ -177,9 +192,9 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
 
             &:focus {
               outline: none;
-              border-color: #2563eb;
+              border-color: #4f46e5;
               background: #ffffff;
-              box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+              box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
             }
 
             &::placeholder {
@@ -193,7 +208,7 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
     .btn-submit {
       width: 100%;
       padding: 12px;
-      background-color: #2563eb;
+      background-color: #4f46e5;
       color: white;
       border: none;
       border-radius: 8px;
@@ -204,7 +219,7 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
       margin-top: 10px;
 
       &:hover {
-        background-color: #1d4ed8;
+        background-color: #4338ca;
       }
 
       &:active {
@@ -217,9 +232,30 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
       }
     }
 
+    .signup-prompt {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+
+      p {
+        color: #475569;
+        margin: 0;
+
+        a {
+          color: #4f46e5;
+          font-weight: 600;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+
     .login-footer {
       text-align: center;
-      margin-top: 30px;
+      margin-top: 24px;
       border-top: 1px solid #f1f5f9;
       padding-top: 20px;
 

@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 export interface TmsUser {
@@ -13,6 +14,14 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string; // Added to match backend validation
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -23,6 +32,8 @@ export interface AuthResponse {
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private router = inject(Router);
+
   private accessToken = signal<string | null>(null);
   currentUser = signal<TmsUser | null>(null);
 
@@ -40,10 +51,8 @@ export class AuthService {
       this.http.post<AuthResponse>('/api/v1/auth/login', credentials)
     );
     
-    // Store access token in memory signal
     this.accessToken.set(res.accessToken);
 
-    // Decode user payload from the JWT payload segment (index 1)
     const payload = JSON.parse(atob(res.accessToken.split('.')[1]));
     
     this.currentUser.set({
@@ -53,8 +62,15 @@ export class AuthService {
     });
   }
 
+  async register(data: RegisterRequest): Promise<any> {
+    return await firstValueFrom(
+      this.http.post<any>('/api/v1/auth/register', data)
+    );
+  }
+
   logout(): void {
     this.accessToken.set(null);
     this.currentUser.set(null);
+    this.router.navigate(['/login']);
   }
 }

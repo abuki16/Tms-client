@@ -7,12 +7,27 @@
       <p class="subtitle">System oversight, enrollment authorizations, and academic governance.</p>
     </div>
     <div class="action-buttons">
-      <button class="btn-secondary" (click)="refreshData()">🔄 Refresh</button>
-      <a routerLink="/enrollments" class="btn-outline">👥 Enrollments</a>
-      <a routerLink="/admin/users" class="btn-secondary">👤 Users</a>
-      <a routerLink="/admin/certificates" class="btn-outline">📜 Certificates</a>
-      <a routerLink="/admin/course-management" class="btn-primary">📚 Courses</a>
-      <a routerLink="/admin/registrar-analytics" class="btn-outline">📊 Registrar Analytics</a>
+      <button class="btn-secondary" (click)="refreshData()">
+        <span class="icon">🔄</span> Refresh
+      </button>
+      <a routerLink="/enrollments" class="btn-outline">
+        <span class="icon">👥</span> Enrollments
+      </a>
+      <a routerLink="/admin/users" class="btn-secondary">
+        <span class="icon">👤</span> Users
+      </a>
+      <a routerLink="/admin/certificates" class="btn-outline">
+        <span class="icon">📜</span> Certificates
+      </a>
+      <a routerLink="/admin/course-management" class="btn-primary">
+        <span class="icon">📚</span> Courses
+      </a>
+      <a routerLink="/admin/registrar-analytics" class="btn-outline">
+        <span class="icon">📊</span> Analytics
+      </a>
+      <button class="btn-logout" (click)="authService.logout()">
+        <span class="icon">🚪</span> Logout
+      </button>
     </div>
   </div>
 
@@ -36,7 +51,7 @@
 
   <!-- Management Overview & Quick Launch Grid -->
   <div class="dashboard-grid">
-    <div class="section-card">
+    <div class="section-card welcome-card">
       <h3>Administrative Overview</h3>
       <p>Welcome to the central command hub. Use the quick action shortcuts above or navigation cards below to manage course curricula, provision user credentials, oversee enrollments, or handle official certificate generation.</p>
     </div>

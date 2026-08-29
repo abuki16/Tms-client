@@ -12,6 +12,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "register",
+    loadComponent: () =>
+      import("./features/register/register.component").then(
+        (m) => m.RegisterComponent,
+      ),
+  },
+  {
     path: "unauthorized",
     component: UnauthorizedComponent,
   },
@@ -21,6 +28,7 @@ export const routes: Routes = [
       import("./features/student-dashboard/student-dashboard.component").then(
         (m) => m.StudentDashboardComponent,
       ),
+    canActivate: [roleGuard('Student')]
   },
   {
     path: "instructor-dashboard",
@@ -43,13 +51,6 @@ export const routes: Routes = [
     component: AdminCourseListComponent,
     canActivate: [roleGuard('Admin')]
   },
-  // {
-  //   path: 'admin/course-management',
-  //   loadComponent: () =>
-  //     import('./features/course-management/course-management.component')
-  //       .then(m => m.CourseManagementComponent),
-  //   canActivate: [roleGuard('Admin')]
-  // },
   {
     path: 'admin/users',
     loadComponent: () =>
