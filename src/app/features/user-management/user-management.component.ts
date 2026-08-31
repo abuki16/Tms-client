@@ -1,15 +1,31 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-export interface RegisterRequestDto {
+export interface UserDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  userName: string;
+}
+
+export interface UpdateUserDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  userName: string;
+}
+
+export interface RegisterRequest {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-  role: string; // 'Admin' | 'Instructor' | 'Student'
+  role: string;
 }
 
 @Component({
@@ -19,13 +35,19 @@ export interface RegisterRequestDto {
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss'
 })
-export class UserManagementComponent {
+export class UserManagementComponent implements OnInit {
   private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
-  private baseUrl = 'http://localhost:5049/api/v1/auth';
+  
+  private authBaseUrl = 'http://localhost:5049/api/v1/auth';
 
-  // Form model matching C# RegisterRequest record completely
-  newUser: RegisterRequestDto = {
+  users: UserDto[] = [];
+  isLoadingUsers = false;
+  
+  // Edit mode state
+  editingUser: UpdateUserDto | null = null;
+
+  newUser: RegisterRequest = {
     email: '',
     password: '',
     firstName: '',
@@ -33,40 +55,96 @@ export class UserManagementComponent {
     role: 'Student'
   };
 
-  onRegisterUser() {
-    this.http.post(`${this.baseUrl}/register`, this.newUser).subscribe({
-      next: (res: any) => {
-        const msg = res.message || `User account registered successfully!`;
-        
-        // Show success notification snackbar
-        this.snackBar.open(msg, 'Close', {
-          duration: 4000,
-          horizontalPosition: 'right',
-          verticalPosition: 'top',
-          panelClass: ['success-snackbar']
-        });
+  ngOnInit() {
+    this.loadUsers();
+  }
 
-        // Reset form
-        this.newUser = { email: '', password: '', firstName: '', lastName: '', role: 'Student' };
+  loadUsers() {
+    this.isLoadingUsers = true;
+    this.http.get<UserDto[]>(`${this.authBaseUrl}/users`).subscribe({
+      next: (data) => {
+        this.users = data;
+        this.isLoadingUsers = false;
+      },
+      error: () => {
+        this.isLoadingUsers = false;
+        this.showSnackbar('Failed to load registered users list.', 'error-snackbar');
+      }
+    });
+  }
+
+  onRegisterUser() {
+    this.http.post(`${this.authBaseUrl}/register`, this.newUser).subscribe({
+      next: () => {
+        this.showSnackbar('User account created successfully.', 'success-snackbar');
+        this.newUser = {
+          email: '',
+          password: '',
+          firstName: '',
+          lastName: '',
+          role: 'Student'
+        };
+        this.loadUsers();
       },
       error: (err) => {
-        let errorMsg = 'Failed to register user. Please check password complexity requirements.';
-        const errors = err.error?.errors;
-        
-        if (errors && Array.isArray(errors)) {
-          errorMsg = errors.join(' | ');
-        } else if (err.error?.detail) {
-          errorMsg = err.error.detail;
-        }
-
-        // Show error notification snackbar
-        this.snackBar.open(errorMsg, 'Dismiss', {
-          duration: 5000,
-          horizontalPosition: 'right',
-          verticalPosition: 'top',
-          panelClass: ['error-snackbar']
-        });
+        const errMsg = err.error?.message || err.error?.errors?.[0] || 'Failed to create user account.';
+        this.showSnackbar(errMsg, 'error-snackbar');
       }
+    });
+  }
+
+  onStartEdit(user: UserDto) {
+    this.editingUser = { ...user };
+  }
+
+  onCancelEdit() {
+    this.editingUser = null;
+  }
+
+  onUpdateUser() {
+    if (!this.editingUser) return;
+
+    this.http.put(`${this.authBaseUrl}/users/${this.editingUser.id}`, this.editingUser).subscribe({
+      next: () => {
+        this.showSnackbar('User account updated successfully.', 'success-snackbar');
+        
+        const index = this.users.findIndex(u => u.id === this.editingUser?.id);
+        if (index !== -1 && this.editingUser) {
+          this.users[index] = { ...this.editingUser };
+        }
+        
+        this.editingUser = null;
+      },
+      error: (err) => {
+        const errMsg = err.error?.message || 'Failed to update user account.';
+        this.showSnackbar(errMsg, 'error-snackbar');
+      }
+    });
+  }
+
+  onDeleteUser(userId: string) {
+    if (confirm('Are you sure you want to permanently delete this user account?')) {
+      this.http.delete(`${this.authBaseUrl}/users/${userId}`).subscribe({
+        next: () => {
+          this.showSnackbar('User account deleted successfully.', 'success-snackbar');
+          this.users = this.users.filter(u => u.id !== userId);
+          if (this.editingUser?.id === userId) {
+            this.editingUser = null;
+          }
+        },
+        error: () => {
+          this.showSnackbar('Failed to delete user account.', 'error-snackbar');
+        }
+      });
+    }
+  }
+
+  private showSnackbar(message: string, panelClass: string) {
+    this.snackBar.open(message, 'Close', {
+      duration: 4000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: [panelClass]
     });
   }
 }

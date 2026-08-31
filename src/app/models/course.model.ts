@@ -11,15 +11,12 @@ export interface Course {
   status?: string;
 }
 
-/** Envelope for `GET /api/courses` — TMS API contract list shape (`PagedResponse`). */
+/** Envelope for `GET /api/courses` — Matches C# PagedResponse contract. */
 export interface PagedResponse<T> {
   items: T[];
   totalCount: number;
   page: number;
   pageSize: number;
-  totalPages: number;
-  hasPrevious: boolean;
-  hasNext: boolean;
 }
 
 /** One link from `CourseDetailDto.Links` on `GET /api/courses/{id}`. */
@@ -29,7 +26,7 @@ export interface CourseLink {
   method: string;
 }
 
-/** Detail payload — mirrors `CourseDetailDto` (list rows do not include `links`). */
+/** Detail payload — mirrors `CourseDetailDto`. */
 export interface CourseDetail extends Course {
   links: readonly CourseLink[];
 }

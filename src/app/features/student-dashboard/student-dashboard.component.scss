@@ -1,54 +1,101 @@
 .dashboard {
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 2.5rem auto;
   padding: 2.5rem;
   background: #f8fafc;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   font-family: system-ui, -apple-system, sans-serif;
 
   h1 {
     color: #0f172a;
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.025em;
+  }
+
+  .subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
   }
 
   h2 {
     color: #1e293b;
     font-size: 1.5rem;
     font-weight: 600;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    color: #475569;
-    font-size: 1rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1.25rem;
   }
 }
 
 .header-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .stats-badge {
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 1.25rem;
   background: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: 10px;
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 
   p {
     margin: 0;
     font-size: 0.95rem;
     color: #334155;
+  }
+
+  .badge {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &.eligible {
+      background: #dcfce7;
+      color: #15803d;
+    }
+  }
+}
+
+.btn-logout {
+  background: white;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 0.65rem 1.15rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+  &:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
   }
 }
 
@@ -56,10 +103,22 @@
   background-color: #eff6ff;
   color: #1d4ed8;
   padding: 1rem 1.25rem;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #bfdbfe;
   margin: 1.5rem 0;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.05);
+
+  .alert-icon {
+    font-size: 1.1rem;
+  }
+}
+
+.action-bar {
+  margin-top: 1rem;
 }
 
 .btn-primary {
@@ -67,15 +126,15 @@
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 
   &:hover {
     background-color: #1d4ed8;
-    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
     transform: translateY(-1px);
   }
 }
@@ -83,10 +142,9 @@
 .divider {
   border: none;
   border-top: 1px solid #e2e8f0;
-  margin: 2rem 0;
+  margin: 2.5rem 0;
 }
 
-/* Two-Column Grid Layout */
 .courses-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
@@ -100,17 +158,17 @@
 .course-card-wrapper {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.25s ease-in-out;
 
   &:hover {
     border-color: #cbd5e1;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.06);
     transform: translateY(-2px);
   }
 }
@@ -124,21 +182,43 @@
 .capacity-badge {
   background: #f1f5f9;
   color: #475569;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 20px;
   border: 1px solid #e2e8f0;
 }
 
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .loading-state, .error-state, .empty-state {
   text-align: center;
-  padding: 3rem;
   color: #64748b;
   font-style: italic;
-  background: white;
-  border-radius: 12px;
-  border: 1px dashed #cbd5e1;
+  margin: 0;
 }
 
 .selection-hint {
@@ -146,21 +226,23 @@
   padding: 1rem 1.25rem;
   background: #f0fdf4;
   border-left: 4px solid #16a34a;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #15803d;
   font-size: 0.95rem;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.04);
 }
+
 .dashboard-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
   border-top: 1px dashed #e2e8f0;
 
   .enrollments-link {
     color: #2563eb;
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     transition: all 0.2s ease-in-out;
 

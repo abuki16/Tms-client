@@ -16,7 +16,7 @@ export class EnrollmentService {
     });
   }
 
-  // Updated to accept courseCode (string) and map to PascalCase for the C# backend command
+  // Updated studentId from string to number
   create(courseCode: string, data: { courseCode: string; studentId: number }): Observable<Enrollment> {
     const backendPayload = {
       StudentId: data.studentId,

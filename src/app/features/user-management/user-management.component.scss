@@ -1,43 +1,66 @@
 .admin-panel-container {
-  padding: 2rem;
-  max-width: 900px;
+  padding: 36px;
+  max-width: 1350px;
   margin: 0 auto;
+  font-family: inherit;
+  color: #1e293b;
+  background-color: #f8fafc;
+  min-height: 100vh;
 
   .panel-header {
-    margin-bottom: 1.5rem; // Fixed typo here (1.5krem -> 1.5rem)
-    
+    margin-bottom: 28px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 20px;
+
     h2 {
-      font-size: 1.75rem;
-      color: #2c3e50;
-      margin-bottom: 0.25rem;
+      font-size: 2.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.025em;
     }
-    
+
     .subtitle {
-      color: #7f8c8d;
-      font-size: 0.95rem;
+      color: #64748b;
+      font-size: 1rem;
+      margin: 0;
     }
   }
 
+  // Cards
   .card {
     background: #ffffff;
-    border-radius: 8px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
 
     h3 {
       font-size: 1.25rem;
-      color: #34495e;
-      margin-bottom: 1rem;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 0.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 16px 0;
+    }
+
+    &.mt-4 {
+      margin-top: 24px;
+    }
+
+    &.p-4 {
+      padding: 28px;
+    }
+
+    &.edit-card {
+      border: 2px solid #3b82f6 !important;
+      background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
     }
   }
 
+  // Form Grid Layout
   .user-form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    gap: 16px;
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
@@ -47,60 +70,162 @@
   .form-group {
     display: flex;
     flex-direction: column;
-    
-    label {
+
+    .form-label {
       font-weight: 600;
-      font-size: 0.875rem;
-      color: #4a5568;
-      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #334155;
+      margin-bottom: 6px;
     }
 
     .form-control {
-      padding: 0.75rem;
+      padding: 10px 14px;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 0.95rem;
-      transition: border-color 0.2s;
+      background: #ffffff;
+      color: #1e293b;
+      transition: all 0.2s ease;
 
       &:focus {
         outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      &::placeholder {
+        color: #94a3b8;
       }
     }
   }
 
-  .btn-primary {
-    background-color: #2563eb;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
+  // Action Buttons
+  .btn {
+    padding: 10px 18px;
+    border-radius: 8px;
     font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 
-    &:hover {
-      background-color: #1d4ed8;
+    &:active {
+      transform: translateY(1px);
+    }
+
+    &.btn-sm {
+      padding: 6px 12px;
+      font-size: 0.825rem;
     }
   }
 
-  .alert {
-    padding: 1rem;
+  .btn-primary {
+    background: #2563eb;
+    color: white;
+    &:hover { background: #1d4ed8; }
+  }
+
+  .btn-outline-secondary {
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    &:hover { background: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
+  }
+
+  .btn-secondary-sm {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 6px 12px;
     border-radius: 6px;
-    margin-bottom: 1rem;
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+  }
+
+  .btn-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 6px 12px;
+    font-size: 0.825rem;
+    &:hover { background-color: #fef2f2; border-color: #f87171; }
+  }
+
+  // Table Styling
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+
+    th {
+      font-weight: 600;
+      color: #475569;
+      background-color: #f8fafc;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 12px 16px;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    td {
+      padding: 14px 16px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      font-size: 0.925rem;
+
+      code {
+        background-color: #f1f5f9;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #475569;
+      }
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
+    }
+  }
+
+  .text-end { text-align: right; }
+  .text-center { text-align: center; }
+  .py-4 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .mt-2 { margin-top: 8px; }
+  .mt-3 { margin-top: 16px; }
+  .mb-3 { margin-bottom: 16px; }
+  .me-2 { margin-right: 8px; }
+  
+  .d-flex { display: flex; }
+  .justify-content-between { justify-content: space-between; }
+  .align-items-center { align-items: center; }
+  
+  .text-muted { color: #64748b; }
+}
+
+// Global Angular Material Snackbar styling
+::ng-deep {
+  .success-snackbar {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
     font-weight: 500;
+  }
 
-    &.error {
-      background-color: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #f87171;
-    }
-
-    &.success {
-      background-color: #f0fdf4;
-      color: #166534;
-      border: 1px solid #4ade80;
-    }
+  .error-snackbar {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    font-weight: 500;
   }
 }

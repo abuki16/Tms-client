@@ -1,58 +1,145 @@
 <div class="dashboard">
+
+  <!-- Top Navigation / Header Bar -->
+
   <div class="header-section">
-    <h1>Welcome, {{ studentName() }}</h1>
-    <div class="stats-badge">
-      <p><strong>Credits Earned:</strong> {{ earnedCredits() }}</p>
-      <p><strong>Status:</strong> <span class="badge">{{ graduationStatus() }}</span></p>
+
+    <div class="welcome-block">
+
+      <h1>Welcome, {{ studentName() }}</h1>
+
+      <p class="subtitle">Here is your academic overview and available courses.</p>
+
     </div>
-  </div>
-  
-  <!-- Dashboard summary widget showing pending count -->
-  <div class="alert alert-info my-2">
-    Pending Enrollments Needing Review: <strong>{{ store.pendingCount() }}</strong>
+
+   
+
+    <div class="header-actions">
+
+      <div class="stats-badge">
+
+        <p><strong>Credits:</strong> {{ earnedCredits() }}</p>
+
+        <span class="badge" [class.eligible]="earnedCredits() >= 120">{{ graduationStatus() }}</span>
+
+      </div>
+
+      <button class="btn-logout" (click)="logout()" title="Sign Out">
+
+        <span class="icon">🚪</span> Sign Out
+
+      </button>
+
+    </div>
+
   </div>
 
-  <button class="btn-primary" (click)="registerForClass()">
-    Register for a Class (+3 credits)
-  </button>
+ 
+
+  <!-- Dashboard summary widget showing pending count -->
+
+  <div class="alert alert-info">
+
+    <span class="alert-icon">ℹ️</span>
+
+    <span>Pending Enrollments Needing Review: <strong>{{ store.pendingCount() }}</strong></span>
+
+  </div>
+
+
+
+  <div class="action-bar">
+
+    <button class="btn-primary" (click)="registerForClass()">
+
+      + Register for a Class (+3 credits)
+
+    </button>
+
+  </div>
+
+
 
   <hr class="divider" />
 
+
+
   <h2>Course Catalog</h2>
 
+
+
   @if (coursesResource.isLoading()) {
-    <p class="loading-state">Fetching courses from the server...</p>
-  } @else if (coursesResource.error()) {
-    <p class="error-state">Could not load courses. Make sure your .NET API is running.</p>
-  } @else {
-    <div class="courses-grid">
-      @for (course of coursesResource.value()!; track course.id) {
-        <div class="course-card-wrapper">
-          <div class="course-meta">
-            <span class="capacity-badge">
-              Capacity: {{ getEnrolledCount(course.id) }} / {{ course.maxCapacity }}
-            </span>
-          </div>
-          
-          <tms-course-card 
-            [course]="course" 
-            (enrollClicked)="handleEnroll($event)">
-          </tms-course-card>
-        </div>
-      } @empty {
-        <p class="empty-state">No courses are available this term. Check back during registration.</p>
-      }
+
+    <div class="state-container">
+
+      <div class="spinner"></div>
+
+      <p class="loading-state">Fetching courses from the server...</p>
+
     </div>
+
+  } @else if (coursesResource.error()) {
+
+    <p class="error-state">Could not load courses. Make sure your .NET API is running.</p>
+
+  } @else {
+
+    <div class="courses-grid">
+
+      @for (course of coursesResource.value()?.items; track course.id) {
+
+        <div class="course-card-wrapper">
+
+          <div class="course-meta">
+
+            <span class="capacity-badge">
+
+              Capacity: {{ getEnrolledCount(course.id) }} / {{ course.maxCapacity }}
+
+            </span>
+
+          </div>
+
+         
+
+          <tms-course-card
+
+            [course]="course"
+
+            (enrollClicked)="handleEnroll($event)">
+
+          </tms-course-card>
+
+        </div>
+
+      } @empty {
+
+        <p class="empty-state">No courses are available this term. Check back during registration.</p>
+
+      }
+
+    </div>
+
   }
-  
+
+ 
 
   @if (selectedCourse(); as picked) {
+
     <div class="selection-hint">
+
       <strong>Last enrollment request:</strong> {{ picked.title }} ({{ picked.code }})
+
     </div>
+
   }
+
+
+
   <div class="dashboard-footer">
-    <a routerLink="/enrollments" class="enrollments-link">Enrollments</a>
+
+    <p class="footer-text">© 2026 Training Management System. All rights reserved.</p>
+
   </div>
-  
+
 </div>

@@ -1,36 +1,36 @@
 <div class="admin-panel-container">
   <div class="panel-header">
     <h2>User Provisioning & Management</h2>
-    <p class="subtitle">Create new system accounts and assign user roles securely.</p>
+    <p class="subtitle">Create new system accounts, review active accounts, and manage roles securely.</p>
   </div>
 
-  <!-- Register New User Card -->
-  <div class="card mt-4">
+  <!-- Register New User Card (Hidden when editing) -->
+  <div class="card mt-4 p-4 shadow-sm" *ngIf="!editingUser">
     <h3>Register New System User</h3>
     <form (submit)="$event.preventDefault(); onRegisterUser()" class="user-form-grid mt-3">
       
       <div class="form-group">
-        <label>Email Address (Username):</label>
+        <label class="form-label">Email Address (Username):</label>
         <input type="email" [(ngModel)]="newUser.email" name="email" placeholder="user@tms.com" required class="form-control" />
       </div>
 
       <div class="form-group">
-        <label>Temporary Password:</label>
+        <label class="form-label">Temporary Password:</label>
         <input type="password" [(ngModel)]="newUser.password" name="password" placeholder="********" required class="form-control" />
       </div>
 
       <div class="form-group">
-        <label>First Name:</label>
+        <label class="form-label">First Name:</label>
         <input type="text" [(ngModel)]="newUser.firstName" name="firstName" placeholder="John" required class="form-control" />
       </div>
 
       <div class="form-group">
-        <label>Last Name:</label>
+        <label class="form-label">Last Name:</label>
         <input type="text" [(ngModel)]="newUser.lastName" name="lastName" placeholder="Doe" required class="form-control" />
       </div>
 
       <div class="form-group" style="grid-column: 1 / -1;">
-        <label>Assign Role:</label>
+        <label class="form-label">Assign Role:</label>
         <select [(ngModel)]="newUser.role" name="role" required class="form-control">
           <option value="Student">Student</option>
           <option value="Instructor">Instructor</option>
@@ -39,8 +39,82 @@
       </div>
 
       <div class="form-actions" style="grid-column: 1 / -1; margin-top: 10px;">
-        <button type="submit" class="btn-primary">Create User Account</button>
+        <button type="submit" class="btn btn-primary">Create User Account</button>
       </div>
     </form>
+  </div>
+
+  <!-- Edit User Form Card (Conditional) -->
+  <div class="card mt-4 p-4 shadow-sm edit-card" *ngIf="editingUser">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3>Edit User Account: {{ editingUser.userName }}</h3>
+      <button class="btn btn-outline-secondary btn-sm" (click)="onCancelEdit()">Cancel</button>
+    </div>
+
+    <form (submit)="$event.preventDefault(); onUpdateUser()" class="user-form-grid mt-3">
+      <div class="form-group">
+        <label class="form-label">Email Address:</label>
+        <input type="email" [(ngModel)]="editingUser.email" name="editEmail" required class="form-control" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username:</label>
+        <input type="text" [(ngModel)]="editingUser.userName" name="editUserName" required class="form-control" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">First Name:</label>
+        <input type="text" [(ngModel)]="editingUser.firstName" name="editFirstName" required class="form-control" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name:</label>
+        <input type="text" [(ngModel)]="editingUser.lastName" name="editLastName" required class="form-control" />
+      </div>
+
+      <div class="form-actions" style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="onCancelEdit()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Users List Card -->
+  <div class="card mt-4 p-4 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3>Registered System Users</h3>
+      <button class="btn btn-outline-secondary btn-sm" (click)="loadUsers()">Refresh List</button>
+    </div>
+
+    <div *ngIf="isLoadingUsers" class="text-center py-4">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="text-muted mt-2">Loading users...</p>
+    </div>
+
+    <table *ngIf="!isLoadingUsers" class="table table-striped table-hover align-middle mt-2">
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Username</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.firstName }} {{ user.lastName }}</td>
+          <td>{{ user.email }}</td>
+          <td><code>{{ user.userName }}</code></td>
+          <td class="text-end action-cell">
+            <button class="btn btn-secondary-sm me-2" (click)="onStartEdit(user)">
+              Edit
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="onDeleteUser(user.id)">
+              Delete
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="users.length === 0">
+          <td colspan="4" class="text-center text-muted py-4">No user accounts found.</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>

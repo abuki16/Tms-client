@@ -1,0 +1,193 @@
+<div class="course-management-container">
+  
+  <!-- Header & Navigation Actions -->
+  <div class="dashboard-header">
+    <div class="title-group">
+      <h1>Course Curriculum Management</h1>
+      <p class="subtitle">Create, configure, and oversee institutional training modules and capacity limits.</p>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-primary" (click)="openCreateModal()">➕ Add New Course</button>
+      <a routerLink="/admin-dashboard" class="btn-outline">🔙 Admin Command Center</a>
+    </div>
+  </div>
+
+  <!-- Alert Notifications -->
+  @if (errorMessage()) {
+    <div class="alert error"><span>⚠️</span> {{ errorMessage() }}</div>
+  }
+  @if (successMessage()) {
+    <div class="alert success"><span>✅</span> {{ successMessage() }}</div>
+  }
+
+  <!-- Toolbar / Search Bar -->
+  <div class="toolbar-card">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input 
+        type="text" 
+        placeholder="Filter courses by code or title..." 
+        (input)="onSearch($event)"
+        class="form-control"
+      />
+    </div>
+    <div class="stats-badge">
+      Total Curricula: <strong>{{ totalCount() }}</strong>
+    </div>
+  </div>
+
+  <!-- Course Data Table -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Course Title</th>
+          <th>Capacity & Utilization</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (course of courses(); track course.id) {
+          <tr>
+            <td><span class="badge-code">{{ course.code }}</span></td>
+            <td><strong>{{ course.title }}</strong></td>
+            <td>
+              <div class="capacity-info">
+                <div class="capacity-text">
+                  <span>{{ course.enrollmentCount }} enrolled</span>
+                  <span class="text-muted">/ {{ course.maxCapacity }} max</span>
+                </div>
+                <div class="progress-bar">
+                  <div 
+                    class="progress-fill" 
+                    [style.width.%]="(course.enrollmentCount / course.maxCapacity) * 100"
+                    [class.full]="course.enrollmentCount >= course.maxCapacity"
+                  ></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="action-cell">
+                <button class="btn-icon" (click)="viewDetails(course.id)" title="Inspect Details & HATEOAS">👁️</button>
+                <button class="btn-icon" (click)="openEditModal(course)" title="Edit Course">✏️</button>
+                <button class="btn-icon danger" (click)="deleteCourse(course.id, course.title)" title="Delete Course">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="empty-state">
+              @if (isLoading()) {
+                <div class="spinner-container">Loading course catalog...</div>
+              } @else {
+                <span>No courses found matching your criteria.</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-footer">
+    <button class="btn-outline" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)">Previous</button>
+    <span class="page-indicator">Page {{ currentPage() }}</span>
+    <button class="btn-outline" [disabled]="courses().length < pageSize()" (click)="changePage(currentPage() + 1)">Next</button>
+  </div>
+
+  <!-- CREATE MODAL -->
+  @if (showCreateModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create New Course</h3>
+          <button class="close-btn" (click)="showCreateModal.set(false)">✕</button>
+        </div>
+        <form (submit)="$event.preventDefault(); createCourse()">
+          <div class="form-group">
+            <label>Course Code</label>
+            <input type="text" [(ngModel)]="newCourse.code" name="code" required class="form-control" placeholder="e.g. CSE-101" />
+          </div>
+          <div class="form-group">
+            <label>Course Title</label>
+            <input type="text" [(ngModel)]="newCourse.title" name="title" required class="form-control" placeholder="e.g. Advanced Web API Patterns" />
+          </div>
+          <div class="form-group">
+            <label>Maximum Capacity</label>
+            <input type="number" [(ngModel)]="newCourse.maxCapacity" name="maxCapacity" required min="1" class="form-control" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-outline" (click)="showCreateModal.set(false)">Cancel</button>
+            <button type="submit" class="btn-primary">Save Course</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- EDIT MODAL -->
+  @if (showEditModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Edit Course Properties</h3>
+          <button class="close-btn" (click)="showEditModal.set(false)">✕</button>
+        </div>
+        <form (submit)="$event.preventDefault(); updateCourse()">
+          <div class="form-group">
+            <label>Course Code</label>
+            <input type="text" [(ngModel)]="editCourseData.code" name="code" required class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Course Title</label>
+            <input type="text" [(ngModel)]="editCourseData.title" name="title" required class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Maximum Capacity</label>
+            <input type="number" [(ngModel)]="editCourseData.maxCapacity" name="maxCapacity" required min="1" class="form-control" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-outline" (click)="showEditModal.set(false)">Cancel</button>
+            <button type="submit" class="btn-primary">Update Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- DETAILS & HATEOAS INSPECTION MODAL -->
+  @if (showDetailsModal() && selectedCourseDetails(); as details) {
+    <div class="modal-backdrop">
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3>Course Details: {{ details.title }}</h3>
+          <button class="close-btn" (click)="showDetailsModal.set(false)">✕</button>
+        </div>
+        
+        <div class="detail-grid">
+          <div class="detail-item"><strong>Code:</strong> <code>{{ details.code }}</code></div>
+          <div class="detail-item"><strong>Capacity:</strong> {{ details.enrollmentCount }} / {{ details.maxCapacity }} Seats</div>
+          <div class="detail-item"><strong>Status:</strong> {{ details.status || 'Active' }}</div>
+        </div>
+
+        <h4 class="section-title">HATEOAS Endpoint Links</h4>
+        <div class="links-box">
+          @for (link of details.links; track link.rel) {
+            <div class="link-item">
+              <span class="method-badge" [class.get]="link.method === 'GET'" [class.post]="link.method === 'POST'" [class.put]="link.method === 'PUT'" [class.delete]="link.method === 'DELETE'">{{ link.method }}</span>
+              <code class="link-url">{{ link.href }}</code>
+              <span class="rel-badge">({{ link.rel }})</span>
+            </div>
+          }
+        </div>
+
+        <div class="modal-actions mt-4">
+          <button type="button" class="btn-primary" (click)="showDetailsModal.set(false)">Close Inspector</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

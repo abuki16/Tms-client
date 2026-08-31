@@ -107,8 +107,13 @@
       border-left: 4px solid #2563eb;
     }
 
-    h3 { font-size: 1.3rem; font-weight: 700; color: #1e293b; margin: 0 0 12px 0; }
+    &.mt-4 {
+      margin-top: 24px;
+    }
+
+    h3 { font-size: 1.3rem; font-weight: 700; color: #1e293b; margin: 0 0 6px 0; }
     p { color: #475569; line-height: 1.7; font-size: 0.95rem; margin: 0; }
+    .section-subtitle { font-size: 0.85rem; color: #64748b; margin-bottom: 16px; }
   }
 
   .quick-links-grid {
@@ -147,7 +152,94 @@
     }
   }
 
-  /* Refined Button Suite */
+  // Edit Card Styles
+  .edit-card {
+    border: 2px solid #3b82f6 !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
+
+    .edit-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+
+      label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #334155;
+        margin-bottom: 6px;
+      }
+
+      .form-control {
+        padding: 8px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background: #ffffff;
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+      }
+    }
+  }
+
+  // Users Table Styling
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+
+    th {
+      font-weight: 600;
+      color: #475569;
+      background-color: #f8fafc;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    td {
+      padding: 12px 14px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      font-size: 0.925rem;
+
+      code {
+        background-color: #f1f5f9;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #475569;
+      }
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
+    }
+  }
+
+  .text-end { text-align: right; }
+  .action-cell { white-space: nowrap; }
+
+  // Action Buttons
   .btn-primary, .btn-secondary, .btn-outline, .btn-logout {
     padding: 9px 16px;
     border-radius: 8px;
@@ -183,6 +275,42 @@
     color: #2563eb; 
     border: 1px solid #cbd5e1; 
     &:hover { background: #f1f5f9; border-color: #2563eb; }
+    &.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+  }
+
+  .btn-secondary-sm {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+  }
+
+  .btn-danger-sm {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #fef2f2;
+      border-color: #f87171;
+    }
   }
 
   .btn-logout {
@@ -194,5 +322,20 @@
       background: #fee2e2;
       border-color: #fca5a5;
     }
+  }
+}
+
+// Global Material Snackbar styling hooks
+::ng-deep {
+  .success-snackbar {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    font-weight: 500;
+  }
+
+  .error-snackbar {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    font-weight: 500;
   }
 }
