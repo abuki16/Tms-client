@@ -11,27 +11,27 @@
       
       <div class="form-group">
         <label class="form-label">Email Address (Username):</label>
-        <input type="email" [(ngModel)]="newUser.email" name="email" placeholder="user@tms.com" required class="form-control" />
+        <input type="email" [(ngModel)]="newUser.email" name="email" placeholder="user@tms.com" class="form-control" />
       </div>
 
       <div class="form-group">
         <label class="form-label">Temporary Password:</label>
-        <input type="password" [(ngModel)]="newUser.password" name="password" placeholder="********" required class="form-control" />
+        <input type="password" [(ngModel)]="newUser.password" name="password" placeholder="********" class="form-control" />
       </div>
 
       <div class="form-group">
         <label class="form-label">First Name:</label>
-        <input type="text" [(ngModel)]="newUser.firstName" name="firstName" placeholder="John" required class="form-control" />
+        <input type="text" [(ngModel)]="newUser.firstName" name="firstName" placeholder="John" class="form-control" />
       </div>
 
       <div class="form-group">
         <label class="form-label">Last Name:</label>
-        <input type="text" [(ngModel)]="newUser.lastName" name="lastName" placeholder="Doe" required class="form-control" />
+        <input type="text" [(ngModel)]="newUser.lastName" name="lastName" placeholder="Doe" class="form-control" />
       </div>
 
       <div class="form-group" style="grid-column: 1 / -1;">
         <label class="form-label">Assign Role:</label>
-        <select [(ngModel)]="newUser.role" name="role" required class="form-control">
+        <select [(ngModel)]="newUser.role" name="role" class="form-control">
           <option value="Student">Student</option>
           <option value="Instructor">Instructor</option>
           <option value="Admin">Admin</option>
@@ -54,19 +54,19 @@
     <form (submit)="$event.preventDefault(); onUpdateUser()" class="user-form-grid mt-3">
       <div class="form-group">
         <label class="form-label">Email Address:</label>
-        <input type="email" [(ngModel)]="editingUser.email" name="editEmail" required class="form-control" />
+        <input type="email" [(ngModel)]="editingUser.email" name="editEmail" class="form-control" />
       </div>
       <div class="form-group">
         <label class="form-label">Username:</label>
-        <input type="text" [(ngModel)]="editingUser.userName" name="editUserName" required class="form-control" />
+        <input type="text" [(ngModel)]="editingUser.userName" name="editUserName" class="form-control" />
       </div>
       <div class="form-group">
         <label class="form-label">First Name:</label>
-        <input type="text" [(ngModel)]="editingUser.firstName" name="editFirstName" required class="form-control" />
+        <input type="text" [(ngModel)]="editingUser.firstName" name="editFirstName" class="form-control" />
       </div>
       <div class="form-group">
         <label class="form-label">Last Name:</label>
-        <input type="text" [(ngModel)]="editingUser.lastName" name="editLastName" required class="form-control" />
+        <input type="text" [(ngModel)]="editingUser.lastName" name="editLastName" class="form-control" />
       </div>
 
       <div class="form-actions" style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">

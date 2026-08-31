@@ -74,6 +74,23 @@ export class UserManagementComponent implements OnInit {
   }
 
   onRegisterUser() {
+    // Professional validation check for missing fields
+    if (
+      !this.newUser.email?.trim() || 
+      !this.newUser.password?.trim() || 
+      !this.newUser.firstName?.trim() || 
+      !this.newUser.lastName?.trim()
+    ) {
+      this.showSnackbar('Please complete all required fields before proceeding.', 'error-snackbar');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.newUser.email.trim())) {
+      this.showSnackbar('Please provide a valid email address.', 'error-snackbar');
+      return;
+    }
+
     this.http.post(`${this.authBaseUrl}/register`, this.newUser).subscribe({
       next: () => {
         this.showSnackbar('User account created successfully.', 'success-snackbar');
@@ -103,6 +120,16 @@ export class UserManagementComponent implements OnInit {
 
   onUpdateUser() {
     if (!this.editingUser) return;
+
+    if (
+      !this.editingUser.email?.trim() || 
+      !this.editingUser.firstName?.trim() || 
+      !this.editingUser.lastName?.trim() || 
+      !this.editingUser.userName?.trim()
+    ) {
+      this.showSnackbar('Please complete all required fields before saving changes.', 'error-snackbar');
+      return;
+    }
 
     this.http.put(`${this.authBaseUrl}/users/${this.editingUser.id}`, this.editingUser).subscribe({
       next: () => {

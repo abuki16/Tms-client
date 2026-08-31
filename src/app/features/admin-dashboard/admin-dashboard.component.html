@@ -51,13 +51,6 @@
         <span class="kpi-label">Pending Approval Queue</span>
       </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">👤</div>
-      <div class="kpi-info">
-        <span class="kpi-value">{{ users.length }}</span>
-        <span class="kpi-label">Registered System Users</span>
-      </div>
-    </div>
   </div>
 
   <!-- Management Overview & Quick Launch Grid -->
@@ -113,86 +106,6 @@
           </div>
         </a>
       </div>
-    </div>
-  </div>
-
-  <!-- Edit User Form Card (Conditional) -->
-  <div class="section-card mt-4 edit-card" *ngIf="editingUser">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3>Edit User Account: {{ editingUser.userName }}</h3>
-      <button class="btn-outline btn-sm" (click)="onCancelEdit()">Cancel</button>
-    </div>
-
-    <form (submit)="$event.preventDefault(); onUpdateUser()" class="edit-form-grid">
-      <div class="form-group">
-        <label>First Name:</label>
-        <input type="text" [(ngModel)]="editingUser.firstName" name="editFirstName" required class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Last Name:</label>
-        <input type="text" [(ngModel)]="editingUser.lastName" name="editLastName" required class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Email Address:</label>
-        <input type="email" [(ngModel)]="editingUser.email" name="editEmail" required class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Username:</label>
-        <input type="text" [(ngModel)]="editingUser.userName" name="editUserName" required class="form-control" />
-      </div>
-
-      <div class="form-actions" style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
-        <button type="submit" class="btn-primary">Save Changes</button>
-        <button type="button" class="btn-outline" (click)="onCancelEdit()">Cancel</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Full-Width Users Listing & Management Section -->
-  <div class="section-card mt-4 users-section">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div>
-        <h3>Registered System Users</h3>
-        <p class="section-subtitle">Overview of all active system credentials with modification and deletion capabilities.</p>
-      </div>
-      <button class="btn-outline btn-sm" (click)="loadUsers()">
-        <span class="icon">🔄</span> Reload Users
-      </button>
-    </div>
-
-    <div *ngIf="isLoadingUsers" class="text-center py-4">
-      <p class="text-muted">Loading user database...</p>
-    </div>
-
-    <div class="table-responsive" *ngIf="!isLoadingUsers">
-      <table class="dashboard-table">
-        <thead>
-          <tr>
-            <th>Full Name</th>
-            <th>Email Address</th>
-            <th>Username</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of users">
-            <td><strong>{{ user.firstName }} {{ user.lastName }}</strong></td>
-            <td>{{ user.email }}</td>
-            <td><code>{{ user.userName }}</code></td>
-            <td class="text-end action-cell">
-              <button class="btn-secondary-sm me-2" (click)="onStartEdit(user)">
-                ✏️ Edit
-              </button>
-              <button class="btn-danger-sm" (click)="onDeleteUser(user.id)">
-                🗑️ Delete
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="users.length === 0">
-            <td colspan="4" class="text-center text-muted py-4">No user accounts found in the registry.</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 
