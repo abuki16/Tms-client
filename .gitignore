@@ -39,6 +39,12 @@ testem.log
 /typings
 __screenshots__/
 
+# Playwright sessions and generated test artifacts
+/playwright/.auth/
+/playwright-report/
+/test-results/
+/blob-report/
+
 # System files
 .DS_Store
 Thumbs.db

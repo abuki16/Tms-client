@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { CourseDetailComponent } from './course-detail.component';
 
@@ -8,12 +9,13 @@ describe('CourseDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CourseDetailComponent],
+      imports: [CourseDetailComponent, RouterTestingModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CourseDetailComponent);
+    fixture.componentRef.setInput('id', 'course-1');
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
