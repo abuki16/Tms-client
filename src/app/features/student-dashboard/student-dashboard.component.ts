@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from "@angular/core";
+import { Component, signal, computed, inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { CourseCardComponent } from "../../ui/course-card/course-card.component";
 import { Course } from "../../models/course.model";
@@ -12,6 +12,7 @@ import { AuthService } from "../../services/auth.service";
   selector: "app-student-dashboard",
   standalone: true,
   imports: [CourseCardComponent, RouterLink],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: "./student-dashboard.component.html",
   styleUrl: "./student-dashboard.component.scss",
 })
