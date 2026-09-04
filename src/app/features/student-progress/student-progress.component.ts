@@ -63,33 +63,59 @@ export class StudentProgressComponent implements OnInit {
     return this.progressData()?.registrationNumber || 'TMS-2026-XXXX';
   });
 
-  gpa = computed(() => {
-    return this.progressData()?.gpa ?? 0;
-  });
-
-  hasOfficialGpa = computed(() => {
-    return this.gpa() > 0;
-  });
-
   // Combine store entities with any student progress records
   studentEnrollments = computed(() => {
     const currentId = this.studentId();
+    const serverEnrollments = this.progressData()?.enrollments || [];
     // Filter enrollments from reactive store that belong to this student
     const storeItems = this.store.entities().filter(
       (e: any) => Number(e.studentId) === currentId
     );
 
-    if (storeItems.length > 0) {
-      return storeItems;
+    if (storeItems.length === 0) {
+      return serverEnrollments;
     }
 
-    return this.progressData()?.enrollments || [];
+    // Merge store items with server enrollments to keep grades, course names, etc.
+    return storeItems.map((st: any) => {
+      const serverMatch = serverEnrollments.find((se: any) => 
+        (se.id && Number(se.id) === Number(st.id)) ||
+        (se.courseId && Number(se.courseId) === Number(st.courseId)) ||
+        (se.courseCode && st.courseCode && se.courseCode.trim().toLowerCase() === st.courseCode.trim().toLowerCase())
+      );
+      return {
+        ...st,
+        grade: st.grade ?? serverMatch?.grade ?? null,
+        courseName: st.courseName || serverMatch?.courseName,
+        courseCode: st.courseCode || serverMatch?.courseCode,
+      };
+    });
   });
 
-  // Automatically compute credits: 45 baseline + 3 credits per enrolled non-rejected course
+  // Completed enrollments with an official passing grade (Grade >= 2.00)
+  completedEnrollments = computed(() => {
+    return this.studentEnrollments().filter(
+      (e: any) => e.grade != null && Number(e.grade) >= 2.0
+    );
+  });
+
+  // Calculate GPA strictly from completed courses with submitted grades. If 0 completed, GPA is 0 (In Progress)
+  gpa = computed(() => {
+    const completed = this.completedEnrollments();
+    if (completed.length === 0) {
+      return 0;
+    }
+    const sum = completed.reduce((acc: number, curr: any) => acc + Number(curr.grade), 0);
+    return Math.round((sum / completed.length) * 100) / 100;
+  });
+
+  hasOfficialGpa = computed(() => {
+    return this.completedEnrollments().length > 0 && this.gpa() > 0;
+  });
+
+  // Automatically compute credits: 3 credits per completed course with a passing grade
   earnedCredits = computed(() => {
-    const enrolled = this.studentEnrollments().filter((e: any) => e.status !== 'Rejected');
-    return 45 + (enrolled.length * 3);
+    return this.completedEnrollments().length * 3;
   });
 
   graduationProgressPercentage = computed(() => {

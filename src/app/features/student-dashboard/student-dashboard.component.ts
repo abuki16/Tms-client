@@ -37,14 +37,14 @@ export class StudentDashboardComponent implements OnInit {
   bonusCredits = signal(0);
 
   // Dynamically compute earned credits:
-  // Baseline 45 + (3 credits for every enrolled course for this student in store) + any manual registration credits
+  // 3 credits for every completed course with a passing grade for this student in store + any manual registration credits
   earnedCredits = computed(() => {
     const sId = this.studentId();
-    const enrolledCoursesCount = this.store.entities().filter(
-      (e: any) => Number(e.studentId) === sId && e.status !== 'Rejected'
+    const completedCoursesCount = this.store.entities().filter(
+      (e: any) => Number(e.studentId) === sId && e.grade != null && Number(e.grade) >= 2.0
     ).length;
 
-    return 45 + (enrolledCoursesCount * 3) + this.bonusCredits();
+    return (completedCoursesCount * 3) + this.bonusCredits();
   });
 
   graduationStatus = computed(() =>
