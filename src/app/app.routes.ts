@@ -30,6 +30,14 @@ export const routes: Routes = [
     canActivate: [roleGuard('Student', 'Instructor', 'Admin')]
   },
   {
+    path: "me",
+    loadComponent: () =>
+      import("./features/student-progress/student-progress.component").then(
+        (m) => m.StudentProgressComponent,
+      ),
+    canActivate: [roleGuard('Student', 'Instructor', 'Admin')]
+  },
+  {
     path: "instructor-dashboard",
     loadComponent: () =>
       import("./features/instructor-dashboard/instructor-dashboard.component").then(
@@ -79,6 +87,7 @@ export const routes: Routes = [
       import("./features/course-detail/course-detail.component").then(
         (m) => m.CourseDetailComponent,
       ),
+    canActivate: [roleGuard('Student', 'Instructor', 'Admin')]
   },
   {
     path: "enroll/:id",
@@ -86,6 +95,7 @@ export const routes: Routes = [
       import("./features/enrollment-form/enrollment-form.component").then(
         (m) => m.EnrollmentFormComponent,
       ),
+    canActivate: [roleGuard('Student', 'Instructor', 'Admin')]
   },
   {
     path: "enrollments",

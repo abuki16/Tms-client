@@ -1,4 +1,5 @@
 import { Component, signal, computed, inject, OnInit } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 import { CourseCardComponent } from "../../ui/course-card/course-card.component";
 import { Course } from "../../models/course.model";
 import { Router, RouterLink } from "@angular/router";
@@ -10,7 +11,7 @@ import { AuthService } from "../../services/auth.service";
 @Component({
   selector: "app-student-dashboard",
   standalone: true,
-  imports: [CourseCardComponent],
+  imports: [CourseCardComponent, RouterLink],
   templateUrl: "./student-dashboard.component.html",
   styleUrl: "./student-dashboard.component.scss",
 })
@@ -18,16 +19,32 @@ export class StudentDashboardComponent implements OnInit {
   private api = inject(CourseService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private http = inject(HttpClient);
   store = inject(EnrollmentStore);
 
-  ngOnInit() {
-    this.store.loadEnrollments();
-  }
+  studentProfile = signal<any>(null);
 
-  // Default student profile set to Liya Kebede
-  studentName = signal("Liya Kebede");
-  studentId = signal<number>(1); // Default numeric ID assigned to Liya
-  earnedCredits = signal(45);
+  // Dynamically resolve logged-in student name and ID
+  studentName = computed(() =>
+    this.studentProfile()?.name || this.authService.currentUser()?.displayName || "Student"
+  );
+
+  studentId = computed<number>(() =>
+    this.studentProfile()?.id || this.authService.currentUser()?.studentId || 1
+  );
+
+  bonusCredits = signal(0);
+
+  // Dynamically compute earned credits:
+  // Baseline 45 + (3 credits for every enrolled course for this student in store) + any manual registration credits
+  earnedCredits = computed(() => {
+    const sId = this.studentId();
+    const enrolledCoursesCount = this.store.entities().filter(
+      (e: any) => Number(e.studentId) === sId && e.status !== 'Rejected'
+    ).length;
+
+    return 45 + (enrolledCoursesCount * 3) + this.bonusCredits();
+  });
 
   graduationStatus = computed(() =>
     this.earnedCredits() >= 120 ? "Eligible for Graduation" : "In Progress",
@@ -39,8 +56,26 @@ export class StudentDashboardComponent implements OnInit {
 
   selectedCourse = signal<Course | null>(null);
 
+  ngOnInit() {
+    this.store.loadEnrollments();
+    this.fetchCurrentStudentProfile();
+  }
+
+  fetchCurrentStudentProfile() {
+    this.http.get<any>('/api/students/me').subscribe({
+      next: (profile) => {
+        if (profile) {
+          this.studentProfile.set(profile);
+        }
+      },
+      error: (err) => {
+        console.warn('Could not fetch student profile, falling back to auth token info', err);
+      }
+    });
+  }
+
   registerForClass() {
-    this.earnedCredits.update((c) => c + 3);
+    this.bonusCredits.update((b) => b + 3);
   }
 
   logout() {
@@ -57,7 +92,7 @@ export class StudentDashboardComponent implements OnInit {
   handleEnroll(course: Course) {
     this.selectedCourse.set(course);
    
-    // Automatically uses Liya's default student ID for the enrollment payload
+    // Uses the authenticated student's dynamic ID for the enrollment payload
     this.store.enrollStudent({
       courseCode: course.code,
       studentId: this.studentId(), 

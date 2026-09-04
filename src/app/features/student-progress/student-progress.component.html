@@ -1,0 +1,202 @@
+<div class="progress-page">
+
+  <!-- Header Navigation Bar -->
+  <div class="header-section">
+    <div class="welcome-block">
+      <div class="badge-row">
+        <a routerLink="/dashboard" class="btn-back">
+          ← Back to Dashboard
+        </a>
+        <span class="role-badge">Student Progress Portal</span>
+      </div>
+      <h1>{{ studentName() }}</h1>
+      <p class="subtitle">
+        ID: <strong>#{{ studentId() }}</strong> &bull; Registration: <strong>{{ registrationNumber() }}</strong>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-logout" (click)="logout()" title="Sign Out">
+        <span class="icon">🚪</span> Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- Real-time sync alert banner -->
+  <div class="alert alert-sync">
+    <span class="alert-icon">⚡</span>
+    <span>
+      Live Sync Active: <strong>{{ store.pendingCount() }}</strong> system-wide enrollment(s) currently pending review.
+    </span>
+  </div>
+
+  <!-- KPI Progress Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">🎓</div>
+      <div class="kpi-details">
+        <span class="kpi-value">{{ earnedCredits() }} <small>/ 120</small></span>
+        <span class="kpi-label">Credits Earned</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-details">
+        <span class="kpi-value">{{ gpa() | number:'1.2-2' }}</span>
+        <span class="kpi-label">Cumulative GPA</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-details">
+        <span class="kpi-value">{{ pendingCount() }}</span>
+        <span class="kpi-label">My Pending Approvals</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-details">
+        <span class="kpi-value">{{ approvedCount() }}</span>
+        <span class="kpi-label">Approved Enrollments</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Degree Completion Progress Bar -->
+  <div class="progress-container-card">
+    <div class="progress-header">
+      <div>
+        <h3>Graduation Eligibility</h3>
+        <p>Status: <span class="status-tag" [class.eligible]="earnedCredits() >= 120">{{ graduationStatus() }}</span></p>
+      </div>
+      <span class="percentage-label">{{ graduationProgressPercentage() }}% Complete</span>
+    </div>
+
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" [style.width.%]="graduationProgressPercentage()"></div>
+    </div>
+    <div class="progress-footer">
+      <span>0 Credits</span>
+      <span>60 Credits (Midway)</span>
+      <span>120 Credits (Degree Complete)</span>
+    </div>
+  </div>
+
+  <!-- Enrolled Courses & Real-Time Status Table -->
+  <div class="enrollments-card">
+    <div class="card-header">
+      <h2>My Course Enrollments & Real-Time Status</h2>
+      <button class="btn-refresh" (click)="fetchProgress()" title="Refresh records">
+        🔄 Refresh
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="state-container">
+        <div class="spinner"></div>
+        <p>Loading academic progress records...</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Course Title</th>
+              <th>Enrollment Date</th>
+              <th>Grade</th>
+              <th>Approval Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (enrollment of studentEnrollments(); track enrollment.id) {
+              <tr>
+                <td class="course-code">
+                  <strong>{{ getCourseCode(enrollment) }}</strong>
+                </td>
+                <td class="course-title">
+                  {{ getCourseTitle(enrollment) }}
+                </td>
+                <td>
+                  {{ enrollment.enrolledAt | date:'mediumDate' }}
+                </td>
+                <td>
+                  @if (enrollment.grade != null) {
+                    <span class="grade-badge">{{ enrollment.grade | number:'1.1-1' }}</span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td>
+                  <span 
+                    class="status-badge" 
+                    [ngClass]="'status-' + getStatusClass(enrollment)"
+                  >
+                    {{ getStatusLabel(enrollment) }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-cell">
+                  <div class="empty-state">
+                    <p>No course enrollments found yet.</p>
+                    <a routerLink="/dashboard" class="btn-primary-small">Browse Course Catalog</a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- Issued Academic Certificates Section -->
+  <div class="certificates-card">
+    <div class="card-header">
+      <div>
+        <h2>Official Academic Certificates</h2>
+        <p class="section-subtitle">Verified institutional credentials issued by Administration</p>
+      </div>
+      <span class="cert-count-badge">{{ certificates().length }} Verified Credential(s)</span>
+    </div>
+
+    @if (certificates().length > 0) {
+      <div class="certificates-grid">
+        @for (cert of certificates(); track cert.id) {
+          <div class="certificate-badge-card">
+            <div class="cert-icon-wrapper">
+              <span class="cert-icon">📜</span>
+            </div>
+            <div class="cert-details">
+              <h4 class="cert-title">{{ cert.courseTitle }}</h4>
+              <div class="cert-meta">
+                <span class="cert-serial">Serial: <code>{{ cert.serialNumber }}</code></span>
+                <span class="cert-date">Issued: {{ cert.issuedAt | date:'mediumDate' }}</span>
+              </div>
+            </div>
+            <div class="cert-badge-pill">
+              <span class="badge-dot"></span> Official Credential
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-certificates-box">
+        <div class="empty-cert-icon">🎓</div>
+        <h3>No Certificates Issued Yet</h3>
+        <p>Complete your enrolled courses to receive official verified certificates from the academic administration.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="dashboard-footer">
+    <p class="footer-text">© 2026 Training Management System &bull; Student Progress Portal</p>
+  </div>
+
+</div>

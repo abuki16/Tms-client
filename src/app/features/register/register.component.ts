@@ -29,6 +29,16 @@ export class RegisterComponent {
 
   async onRegister(event: Event) {
     event.preventDefault();
+
+    if (!this.newUser.firstName?.trim() || !this.newUser.lastName?.trim()) {
+      this.snackBar.open('Please provide both First Name and Last Name.', 'Dismiss', {
+        duration: 4000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
     this.isLoading = true;
 
     try {

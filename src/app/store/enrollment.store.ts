@@ -10,7 +10,7 @@ import {
 } from '@ngrx/signals';
 import { withEntities, setAllEntities, updateEntity, addEntity } from '@ngrx/signals/entities';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { pipe, concatMap, tap, catchError, switchMap, EMPTY } from 'rxjs';
+import { pipe, concatMap, tap, catchError, switchMap, EMPTY, merge } from 'rxjs';
 import { EnrollmentService } from '../services/enrollment.service';
 import { Enrollment } from '../models/enrollment.model';
 
@@ -28,17 +28,38 @@ export const EnrollmentStore = signalStore(
     listenForLiveUpdates: rxMethod<void>(
       pipe(
         tap(() => sync.connect()),
-        switchMap(() => sync.events$),
-        tap(event => {
-          console.log('SignalR event processed in store:', event);
-          patchState(
-            store,
-            updateEntity({ 
-              id: Number(event.id), // Converts backend string ID to number to match store entity type
-              changes: { status: event.status } 
-            })
-          );
-        })
+        switchMap(() =>
+          merge(
+            sync.events$.pipe(
+              tap(event => {
+                console.log('SignalR status update event processed in store:', event);
+                patchState(
+                  store,
+                  updateEntity({ 
+                    id: Number(event.id), // Converts backend string ID to number to match store entity type
+                    changes: { status: event.status } 
+                  })
+                );
+              })
+            ),
+            sync.enrollmentAdded$.pipe(
+              tap(newEnrollment => {
+                console.log('SignalR enrollment added event processed in store:', newEnrollment);
+                const norm: Enrollment = {
+                  ...newEnrollment,
+                  id: Number(newEnrollment.id),
+                  status: (newEnrollment.status as any) || 'Pending'
+                };
+                const exists = store.entities().some(e => Number(e.id) === norm.id);
+                if (!exists) {
+                  patchState(store, addEntity(norm));
+                } else {
+                  patchState(store, updateEntity({ id: norm.id, changes: norm }));
+                }
+              })
+            )
+          )
+        )
       )
     ),
     loadEnrollments: rxMethod<void>(

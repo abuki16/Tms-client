@@ -7,6 +7,11 @@ export const roleGuard = (...allowedRoles: string[]): CanActivateFn => {
     const auth = inject(AuthService);
     const router = inject(Router);
 
+    // If user is not authenticated, redirect to login page immediately
+    if (!auth.isAuthenticated()) {
+      return router.createUrlTree(['/login']);
+    }
+
     // Check if the user has any of the allowed roles
     const hasAccess = allowedRoles.some(role => auth.hasRole(role));
 

@@ -16,4 +16,6 @@ export interface Enrollment {
 
   enrolledAt: string;
 
+  grade?: number | null;
+
 } 

@@ -1,49 +1,161 @@
 <div class="admin-panel-container">
   <div class="panel-header">
-    <h2>Certificate Governance Portal</h2>
-    <p class="subtitle">Issue official course completion certificates and manage revocations.</p>
+    <div class="title-row">
+      <h2>Certificate Governance & Issuance Portal</h2>
+      <span class="role-pill">Administrator Access</span>
+    </div>
+    <p class="subtitle">Issue official institutional completion certificates by selecting students and auto-fetching their academic records.</p>
   </div>
 
   @if (errorMessage) {
-    <div class="alert error">{{ errorMessage }}</div>
+    <div class="alert error">
+      <span class="alert-icon">⚠️</span> {{ errorMessage }}
+    </div>
   }
   @if (successMessage) {
-    <div class="alert success">{{ successMessage }}</div>
+    <div class="alert success">
+      <span class="alert-icon">✅</span> {{ successMessage }}
+    </div>
   }
 
   <div class="grid-layout">
     <!-- Issue Certificate Card -->
-    <div class="card">
-      <h3>Issue New Certificate</h3>
+    <div class="card issue-card">
+      <div class="card-title-row">
+        <h3>Issue Official Certificate</h3>
+        <span class="step-indicator">Student-to-Course Certificate Generator</span>
+      </div>
+
       <form (submit)="$event.preventDefault(); onIssueCertificate()" class="form-stack mt-3">
         
+        <!-- 1. Select Student -->
         <div class="form-group">
-          <label>Student ID:</label>
-          <input type="number" [(ngModel)]="newCert.studentId" name="studentId" required class="form-control" placeholder="e.g., 1" />
+          <label for="studentSelect">Select Student:</label>
+          <select 
+            id="studentSelect"
+            class="form-control" 
+            [ngModel]="newCert.studentId" 
+            (ngModelChange)="onSelectStudent($event)"
+            name="studentId"
+            required
+          >
+            <option [value]="0" disabled>-- Select a registered student --</option>
+            @for (student of students(); track student.id) {
+              <option [value]="student.id">
+                #{{ student.id }} - {{ student.name }} ({{ student.registrationNumber || 'No Reg #' }})
+              </option>
+            }
+          </select>
         </div>
 
+        <!-- Selected Student Information Card -->
+        @if (selectedStudent(); as student) {
+          <div class="student-summary-card">
+            <div class="summary-avatar">👤</div>
+            <div class="summary-details">
+              <div class="summary-name">{{ student.name }}</div>
+              <div class="summary-tags">
+                <span class="tag-reg">Reg: {{ student.registrationNumber || ('TMS-2026-' + student.id) }}</span>
+                <span class="tag-gpa">GPA: {{ (student.gpa ?? 3.8) | number:'1.2-2' }}</span>
+                @if (studentEnrollments().length > 0) {
+                  <span class="tag-enrollments">{{ studentEnrollments().length }} Enrolled Course(s)</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- 2. Select Course -->
         <div class="form-group">
-          <label>Course ID:</label>
-          <input type="number" [(ngModel)]="newCert.courseId" name="courseId" required class="form-control" placeholder="e.g., 10" />
+          <label for="courseSelect">Select Course to Certify:</label>
+          <select 
+            id="courseSelect"
+            class="form-control" 
+            [ngModel]="newCert.courseId" 
+            (ngModelChange)="onSelectCourse($event)"
+            name="courseId"
+            required
+          >
+            <option [value]="0" disabled>-- Choose a course --</option>
+            @if (studentEnrollments().length > 0) {
+              <optgroup label="Student's Enrolled Courses">
+                @for (enroll of studentEnrollments(); track enroll.id) {
+                  <option [value]="enroll.courseId">
+                    ⭐ {{ enroll.courseTitle || enroll.courseName || ('Course #' + enroll.courseId) }} (Status: {{ enroll.status }})
+                  </option>
+                }
+              </optgroup>
+            }
+            <optgroup label="All Catalog Courses">
+              @for (course of courses(); track course.id) {
+                <option [value]="course.id">
+                  {{ course.code ? (course.code + ' - ') : '' }}{{ course.title }}
+                </option>
+              }
+            </optgroup>
+          </select>
         </div>
 
+        <!-- 3. Standardized Serial Number with Auto-generate -->
         <div class="form-group">
-          <label>Serial Number:</label>
-          <input type="text" [(ngModel)]="newCert.serialNumber" name="serialNumber" required class="form-control" placeholder="CERT-2026-XXXX" />
+          <label for="serialInput">Certificate Serial Number:</label>
+          <div class="input-with-action">
+            <input 
+              id="serialInput"
+              type="text" 
+              [(ngModel)]="newCert.serialNumber" 
+              name="serialNumber" 
+              required 
+              class="form-control font-mono" 
+              placeholder="CERT-2026-XXXX-XXXX" 
+            />
+            <button 
+              type="button" 
+              class="btn-regenerate" 
+              (click)="generateSerialNumber(selectedStudent(), newCert.studentId)"
+              title="Regenerate Serial Number"
+            >
+              🔄 Regenerate
+            </button>
+          </div>
+          <small class="help-text">Standardized institutional format automatically generated.</small>
         </div>
 
-        <button type="submit" class="btn-primary mt-2">Issue Certificate</button>
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="btn-primary mt-2" 
+          [disabled]="isIssuing() || !newCert.studentId || !newCert.courseId"
+        >
+          @if (isIssuing()) {
+            <span class="spinner-sm"></span> Generating Certificate...
+          } @else {
+            🎓 Generate & Issue Certificate
+          }
+        </button>
       </form>
     </div>
 
     <!-- Lookup Student Certificates Card -->
-    <div class="card">
-      <h3>Student Certificate Lookup</h3>
+    <div class="card lookup-card">
+      <div class="card-title-row">
+        <h3>Student Certificate Records</h3>
+        <span class="records-count">{{ studentCertificates().length }} Record(s)</span>
+      </div>
+
       <div class="search-box mt-3">
         <div class="form-group" style="flex: 1;">
-          <input type="number" [(ngModel)]="searchStudentId" name="searchStudentId" placeholder="Enter Student ID" class="form-control" />
+          <input 
+            type="number" 
+            [(ngModel)]="searchStudentId" 
+            name="searchStudentId" 
+            placeholder="Enter Student ID (e.g. 1)" 
+            class="form-control" 
+          />
         </div>
-        <button type="button" class="btn-secondary" (click)="onSearchStudentCertificates()">Search</button>
+        <button type="button" class="btn-secondary" (click)="onSearchStudentCertificates()">
+          🔍 Search Records
+        </button>
       </div>
 
       <div class="mt-3">
@@ -52,20 +164,29 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Serial</th>
-                  <th>Course</th>
-                  <th>Issued Date</th>
-                  <th>Action</th>
+                  <th>Serial Number</th>
+                  <th>Certified Course</th>
+                  <th>Issue Date</th>
+                  <th style="text-align: right;">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 @for (cert of studentCertificates(); track cert.id) {
                   <tr>
-                    <td>{{ cert.serialNumber }}</td>
-                    <td>{{ cert.courseTitle }}</td>
-                    <td>{{ cert.issuedAt | date:'mediumDate' }}</td>
                     <td>
-                      <button class="btn-danger-sm" (click)="onRevoke(cert.id)">Revoke</button>
+                      <code class="serial-code">{{ cert.serialNumber }}</code>
+                    </td>
+                    <td>
+                      <strong>{{ cert.courseTitle }}</strong>
+                    </td>
+                    <td>{{ cert.issuedAt | date:'mediumDate' }}</td>
+                    <td class="action-cell">
+                      <button type="button" class="btn-preview-sm" (click)="openPreview(cert)" title="View Printable Certificate">
+                        👁️ Preview
+                      </button>
+                      <button type="button" class="btn-danger-sm" (click)="onRevoke(cert.id)" title="Revoke Certificate">
+                        🗑️ Revoke
+                      </button>
                     </td>
                   </tr>
                 }
@@ -73,9 +194,69 @@
             </table>
           </div>
         } @else {
-          <p class="empty-state">No certificates found for this student ID.</p>
+          <div class="empty-state-box">
+            <div class="empty-icon">📜</div>
+            <p>No certificates found for this student.</p>
+            <small>Select a student from the generator or enter an ID to view their issued credentials.</small>
+          </div>
         }
       </div>
     </div>
   </div>
+
+  <!-- Certificate Preview Modal -->
+  @if (showPreviewModal() && previewCertificate(); as cert) {
+    <div class="modal-overlay" (click)="closePreview()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Official Credential Preview</h3>
+          <button class="btn-close" (click)="closePreview()">✕</button>
+        </div>
+        <div class="certificate-paper printable" id="printable-certificate">
+          <div class="cert-border-outer">
+            <div class="cert-border-inner">
+              <div class="cert-header-seal">🏛️</div>
+              <h1 class="cert-main-title">Certificate of Academic Achievement</h1>
+              <p class="cert-subtext">This is proudly presented to</p>
+              <h2 class="cert-recipient-name">{{ cert.studentName || selectedStudent()?.name || 'Honored Student' }}</h2>
+              <p class="cert-body-text">
+                for demonstrating academic diligence and successfully meeting the requirements for
+              </p>
+              <h3 class="cert-course-name">{{ cert.courseTitle }}</h3>
+              
+              <div class="cert-details-row">
+                <div class="cert-detail-item">
+                  <span class="detail-label">Serial Number:</span>
+                  <span class="detail-value"><code>{{ cert.serialNumber }}</code></span>
+                </div>
+                <div class="cert-detail-item">
+                  <span class="detail-label">Issue Date:</span>
+                  <span class="detail-value">{{ cert.issuedAt | date:'longDate' }}</span>
+                </div>
+              </div>
+
+              <div class="cert-signatures">
+                <div class="sig-block">
+                  <div class="sig-line"></div>
+                  <span class="sig-title">Director of Academic Affairs</span>
+                </div>
+                <div class="seal-emblem">
+                  <div class="seal-circle">OFFICIAL<br/>SEAL</div>
+                </div>
+                <div class="sig-block">
+                  <div class="sig-line"></div>
+                  <span class="sig-title">Office of the Registrar</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closePreview()">Close</button>
+          <button type="button" class="btn-primary" (click)="printCertificate()">🖨️ Print / Save PDF</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
