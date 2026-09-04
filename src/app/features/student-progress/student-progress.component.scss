@@ -136,6 +136,11 @@
       font-weight: 700;
       color: #0f172a;
 
+      &.gpa-pending {
+        font-size: 1.15rem;
+        color: #d97706;
+      }
+
       small {
         font-size: 0.9rem;
         color: #94a3b8;

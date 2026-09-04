@@ -5,7 +5,23 @@
   font-family: system-ui, -apple-system, sans-serif;
 
   .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 1.5rem;
+
+    .header-content {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
 
     .title-row {
       display: flex;
@@ -213,6 +229,136 @@
     }
   }
 
+  /* Admin Grade Governance Box */
+  .admin-grade-governance-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+
+    .grade-gov-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+
+      .gov-icon {
+        font-size: 1.25rem;
+      }
+
+      strong {
+        color: #0f172a;
+        font-size: 0.95rem;
+      }
+
+      .gov-subtext {
+        margin: 0.2rem 0 0 0;
+        font-size: 0.8rem;
+        color: #64748b;
+      }
+    }
+
+    .grade-gov-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+
+      .grade-current-display {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+
+        .grade-label {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #334155;
+        }
+
+        .grade-pill-highlight {
+          display: inline-block;
+          padding: 0.25rem 0.65rem;
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 0.85rem;
+
+          &.passing {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+          }
+
+          &.failing {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+          }
+        }
+
+        .grade-pill-pending {
+          background: #fef3c7;
+          color: #92400e;
+          padding: 0.25rem 0.65rem;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 0.82rem;
+        }
+      }
+
+      .admin-edit-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+
+        label {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #475569;
+        }
+
+        .input-with-action {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+
+          input {
+            width: 140px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.95rem;
+            border: 1px solid #94a3b8;
+            border-radius: 6px;
+          }
+
+          .btn-secondary-sm {
+            background: #334155;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.55rem 0.9rem;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: background 0.2s;
+
+            &:hover {
+              background: #1e293b;
+            }
+
+            &:disabled {
+              opacity: 0.6;
+              cursor: not-allowed;
+            }
+          }
+        }
+
+        .text-success-hint {
+          font-size: 0.78rem;
+          color: #16a34a;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
   .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -264,6 +410,44 @@
     small {
       font-size: 0.8rem;
       color: #94a3b8;
+    }
+  }
+
+  .validation-status-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    &.status-eligible {
+      background: #ecfdf5;
+      border: 1px solid #10b981;
+      color: #065f46;
+    }
+
+    &.status-ineligible {
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+    }
+
+    .status-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+
+      strong {
+        font-weight: 700;
+      }
     }
   }
 

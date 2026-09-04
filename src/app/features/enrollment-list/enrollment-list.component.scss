@@ -1,14 +1,263 @@
+.enrollments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #0f172a;
+  }
+
+  .subtitle {
+    margin: 0.25rem 0 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-cert-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #4f46e5;
+    color: white;
+    padding: 0.6rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #4338ca;
+    }
+  }
+}
+
+.loading-bar {
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.feedback-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  &.alert-success {
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    color: #065f46;
+  }
+
+  &.alert-error {
+    background: #fef2f2;
+    border: 1px solid #ef4444;
+    color: #b91c1c;
+  }
+}
+
 table {
-width: 100%;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
 }
-.status-badge {
-padding: 0.25rem 0.75rem;
-border-radius: 12px;
-font-size: 0.8rem;
-font-weight: 600;
-text-transform: uppercase;
+
+.student-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  .sub-id {
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
 }
-.status-badge.approved {
-background: #065f46;
-color: #a7f3d0;
+
+.course-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .badge-code {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.status-pill {
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  color: #64748b;
+
+  &.status-approved {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  &.status-pending {
+    background: #fffbeb;
+    color: #d97706;
+  }
+}
+
+.grade-display-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .grade-pill {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+
+    &.graded {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    &.ungraded {
+      background: #f8fafc;
+      color: #94a3b8;
+      border: 1px dashed #cbd5e1;
+    }
+  }
+
+  .btn-edit-inline {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+      background: #e2e8f0;
+    }
+  }
+}
+
+.inline-grade-editor {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  .grade-input {
+    width: 70px;
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    border: 1px solid #3b82f6;
+    border-radius: 4px;
+    outline: none;
+  }
+
+  .btn-save-grade {
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+
+    &:hover {
+      background: #059669;
+    }
+  }
+
+  .btn-cancel-grade {
+    background: #e2e8f0;
+    color: #475569;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover {
+      background: #cbd5e1;
+    }
+  }
+}
+
+.actions-cell-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .btn-approve-sm {
+    background: #2563eb;
+    color: white;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-issue-cert-sm {
+    background: #10b981;
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #059669;
+    }
+  }
+
+  .awaiting-grade-hint {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    background: #f8fafc;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
 }

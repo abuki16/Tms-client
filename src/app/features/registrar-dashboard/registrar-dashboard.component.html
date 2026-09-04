@@ -3,12 +3,18 @@
   <!-- Header & Quick Actions -->
   <div class="dashboard-header">
     <div class="title-group">
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+      </div>
       <h1>Registrar Analytics Dashboard</h1>
       <p class="subtitle">System academic metrics, enrollment rankings, and student performance oversight.</p>
     </div>
     <div class="action-buttons">
       <button class="btn-secondary" (click)="refreshData()">🔄 Refresh Analytics</button>
       <a routerLink="/dashboard" class="btn-outline">👀 Student View</a>
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
     </div>
   </div>
 

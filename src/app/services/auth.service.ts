@@ -81,6 +81,15 @@ export class AuthService {
     return user.role === requiredRole;
   }
 
+  getDashboardRoute(): string {
+    const user = this.currentUser();
+    if (!user) return '/login';
+    const roles = Array.isArray(user.role) ? user.role : [user.role];
+    if (roles.includes('Admin')) return '/admin-dashboard';
+    if (roles.includes('Instructor')) return '/instructor-dashboard';
+    return '/dashboard';
+  }
+
   async login(credentials: LoginRequest): Promise<void> {
     const res = await firstValueFrom(
       this.http.post<AuthResponse>('/api/v1/auth/login', credentials)

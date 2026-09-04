@@ -13,7 +13,7 @@ import {
 })
 export class AssessmentService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:5049/api';
+  private baseUrl = '/api';
 
   // --- Assessment Definitions ---
   getAssessmentsByCourse(courseId: number): Observable<AssessmentResponseDto[]> {

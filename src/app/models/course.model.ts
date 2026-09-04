@@ -8,6 +8,8 @@ export interface Course {
   title: string;
   maxCapacity: number;
   enrollmentCount: number;
+  instructorId?: string | null;
+  instructorName?: string | null;
   status?: string;
 }
 

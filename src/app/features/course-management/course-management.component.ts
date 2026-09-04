@@ -2,12 +2,20 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { CourseService } from '../../services/course.service';
+import { AuthService } from '../../services/auth.service';
 import { 
   Course, 
   CourseDetail, 
   PagedResponse 
 } from '../../models/course.model';
+
+export interface InstructorOption {
+  id: string;
+  name: string;
+  email: string;
+}
 
 @Component({
   selector: 'tms-course-management',
@@ -18,9 +26,12 @@ import {
 })
 export class CourseManagementComponent implements OnInit {
   private courseService = inject(CourseService);
+  public authService = inject(AuthService);
+  private http = inject(HttpClient);
 
   // Data & Pagination Signals
   courses = signal<Course[]>([]);
+  instructors = signal<InstructorOption[]>([]);
   totalCount = signal<number>(0);
   currentPage = signal<number>(1);
   pageSize = signal<number>(50);
@@ -36,13 +47,46 @@ export class CourseManagementComponent implements OnInit {
   showDetailsModal = signal<boolean>(false);
 
   // Form State & Selection
-  newCourse = { code: '', title: '', maxCapacity: 30 };
+  newCourse = { code: '', title: '', maxCapacity: 30, instructorId: '' };
   selectedCourseId: number | null = null;
-  editCourseData = { code: '', title: '', maxCapacity: 30 };
+  editCourseData = { code: '', title: '', maxCapacity: 30, instructorId: '' };
   selectedCourseDetails = signal<CourseDetail | null>(null);
 
   ngOnInit() {
     this.loadCourses();
+    this.loadInstructors();
+  }
+
+  loadInstructors() {
+    this.http.get<any[]>('/api/v1/auth/users').subscribe({
+      next: (users) => {
+        const instrs = (users || [])
+          .filter(u => u.role === 'Instructor' || (u.roles && u.roles.includes('Instructor')))
+          .map(u => ({
+            id: u.id,
+            name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email,
+            email: u.email
+          }));
+        this.instructors.set(instrs);
+      },
+      error: (err) => console.warn('Failed to load instructors list', err)
+    });
+  }
+
+  getInstructorName(instructorId?: string | null): string {
+    if (!instructorId) return '';
+    const inst = this.instructors().find(i => i.id === instructorId);
+    return inst ? inst.name : 'Assigned Instructor';
+  }
+
+  assignInstructor(courseId: number, instructorId: string) {
+    this.http.post(`/api/courses/${courseId}/assign-instructor`, { instructorId: instructorId || null }).subscribe({
+      next: () => {
+        this.triggerSuccess('Instructor assignment updated successfully.');
+        this.loadCourses();
+      },
+      error: () => this.errorMessage.set('Failed to assign instructor to course.')
+    });
   }
 
   loadCourses() {
@@ -86,19 +130,26 @@ export class CourseManagementComponent implements OnInit {
 
   // --- Create Modal & Action ---
   openCreateModal() {
-    this.newCourse = { code: '', title: '', maxCapacity: 30 };
+    this.newCourse = { code: '', title: '', maxCapacity: 30, instructorId: '' };
     this.showCreateModal.set(true);
   }
 
   createCourse() {
-    this.courseService.create(this.newCourse).subscribe({
-      next: () => {
+    this.courseService.create({
+      code: this.newCourse.code,
+      title: this.newCourse.title,
+      maxCapacity: this.newCourse.maxCapacity
+    }).subscribe({
+      next: (created) => {
+        if (this.newCourse.instructorId && created?.id) {
+          this.assignInstructor(created.id, this.newCourse.instructorId);
+        }
         this.showCreateModal.set(false);
         this.triggerSuccess('Course successfully created.');
         this.loadCourses();
       },
       error: (err) => {
-        this.errorMessage.set(err.error?.detail || 'Failed to create course. Ensure the course code follows format XXX-000 and is unique.');
+        this.errorMessage.set(err.error?.detail || 'Failed to create course. Ensure the course code follows format (e.g., CSE-101, AI-101) and is unique.');
       }
     });
   }
@@ -109,7 +160,8 @@ export class CourseManagementComponent implements OnInit {
     this.editCourseData = {
       code: course.code,
       title: course.title,
-      maxCapacity: course.maxCapacity
+      maxCapacity: course.maxCapacity,
+      instructorId: course.instructorId || ''
     };
     this.showEditModal.set(true);
   }
@@ -117,8 +169,15 @@ export class CourseManagementComponent implements OnInit {
   updateCourse() {
     if (this.selectedCourseId === null) return;
 
-    this.courseService.update(this.selectedCourseId, this.editCourseData).subscribe({
+    this.courseService.update(this.selectedCourseId, {
+      code: this.editCourseData.code,
+      title: this.editCourseData.title,
+      maxCapacity: this.editCourseData.maxCapacity
+    }).subscribe({
       next: () => {
+        if (this.editCourseData.instructorId !== undefined) {
+          this.assignInstructor(this.selectedCourseId!, this.editCourseData.instructorId);
+        }
         this.showEditModal.set(false);
         this.triggerSuccess('Course updated successfully.');
         this.loadCourses();

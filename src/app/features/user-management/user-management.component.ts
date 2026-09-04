@@ -1,8 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AuthService } from '../../services/auth.service';
 
 export interface UserDto {
   id: string;
@@ -10,6 +12,10 @@ export interface UserDto {
   firstName: string;
   lastName: string;
   userName: string;
+  role?: string;
+  roles?: string[];
+  assignedCourseId?: number | null;
+  assignedCourseTitle?: string | null;
 }
 
 export interface UpdateUserDto {
@@ -26,22 +32,25 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   role: string;
+  assignedCourseId?: number | null;
 }
 
 @Component({
   selector: 'tms-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatSnackBarModule],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss'
 })
 export class UserManagementComponent implements OnInit {
   private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
+  public authService = inject(AuthService);
   
-  private authBaseUrl = 'http://localhost:5049/api/v1/auth';
+  private authBaseUrl = '/api/v1/auth';
 
   users: UserDto[] = [];
+  courses: any[] = [];
   isLoadingUsers = false;
   
   // Edit mode state
@@ -52,11 +61,22 @@ export class UserManagementComponent implements OnInit {
     password: '',
     firstName: '',
     lastName: '',
-    role: 'Student'
+    role: 'Student',
+    assignedCourseId: null
   };
 
   ngOnInit() {
     this.loadUsers();
+    this.loadCourses();
+  }
+
+  loadCourses() {
+    this.http.get<any>('/api/courses?pageSize=100').subscribe({
+      next: (res) => {
+        this.courses = res?.items ? res.items : (Array.isArray(res) ? res : []);
+      },
+      error: (err) => console.warn('Failed to load courses for user assignment', err)
+    });
   }
 
   loadUsers() {
@@ -69,6 +89,22 @@ export class UserManagementComponent implements OnInit {
       error: () => {
         this.isLoadingUsers = false;
         this.showSnackbar('Failed to load registered users list.', 'error-snackbar');
+      }
+    });
+  }
+
+  onAssignCourse(courseIdVal: any, instructorId: string) {
+    const courseId = Number(courseIdVal);
+    if (!courseId) return;
+
+    this.http.post(`/api/courses/${courseId}/assign-instructor`, { instructorId }).subscribe({
+      next: () => {
+        this.showSnackbar('Course successfully assigned to instructor.', 'success-snackbar');
+        this.loadUsers();
+        this.loadCourses();
+      },
+      error: () => {
+        this.showSnackbar('Failed to assign instructor to course.', 'error-snackbar');
       }
     });
   }
@@ -99,9 +135,11 @@ export class UserManagementComponent implements OnInit {
           password: '',
           firstName: '',
           lastName: '',
-          role: 'Student'
+          role: 'Student',
+          assignedCourseId: null
         };
         this.loadUsers();
+        this.loadCourses();
       },
       error: (err) => {
         const errMsg = err.error?.message || err.error?.errors?.[0] || 'Failed to create user account.';

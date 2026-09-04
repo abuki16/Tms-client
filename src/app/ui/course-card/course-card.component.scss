@@ -1,0 +1,86 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .course-code {
+    margin: 0 0 14px 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .enrolled-status-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    line-height: 1.3;
+
+    &.status-approved {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    &.status-pending {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    &:not(.status-approved):not(.status-pending) {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+
+    .status-icon {
+      font-size: 0.9rem;
+    }
+  }
+
+  button.btn-enroll {
+    margin-top: auto;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+
+    &:hover:not(:disabled) {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+    }
+
+    &:disabled, &.btn-enrolled {
+      background: #e2e8f0;
+      color: #64748b;
+      cursor: not-allowed;
+      border: 1px solid #cbd5e1;
+      transform: none;
+      box-shadow: none;
+      opacity: 0.85;
+    }
+  }
+}

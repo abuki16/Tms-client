@@ -1,4 +1,5 @@
 import { Component, inject, signal } from "@angular/core";
+import { RouterLink } from "@angular/router";
 import {
   FormBuilder,
   FormControl,
@@ -6,18 +7,17 @@ import {
   ReactiveFormsModule,
   FormArray,
 } from "@angular/forms";
+import { AuthService } from "../../services/auth.service";
 
 @Component({
   selector: "app-enrollment-form",
   standalone: true,
-  imports: [ReactiveFormsModule], // Required without this, Angular does not recognize form directives
+  imports: [ReactiveFormsModule, RouterLink], // Required without this, Angular does not recognize form directives
   templateUrl: "./enrollment-form.component.html",
   styleUrl: "./enrollment-form.component.scss",
 })
 export class EnrollmentFormComponent {
-  // inject(FormBuilder) is Angular's way of requesting a service.
-  // It is similar to constructor injection in .NET (like inject ILogger in a C# class).
-  // The "private" keyword means only this class can access it.
+  public authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
   // A signal to track whether the form was submitted (for showing a success message)

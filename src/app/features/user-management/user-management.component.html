@@ -1,7 +1,17 @@
 <div class="admin-panel-container">
   <div class="panel-header">
-    <h2>User Provisioning & Management</h2>
-    <p class="subtitle">Create new system accounts, review active accounts, and manage roles securely.</p>
+    <div class="header-content">
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+      </div>
+      <h2>User Provisioning & Management</h2>
+      <p class="subtitle">Create new system accounts, review active accounts, and manage roles securely.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
   </div>
 
   <!-- Register New User Card (Hidden when editing) -->
@@ -29,12 +39,22 @@
         <input type="text" [(ngModel)]="newUser.lastName" name="lastName" placeholder="Doe" class="form-control" />
       </div>
 
-      <div class="form-group" style="grid-column: 1 / -1;">
+      <div class="form-group">
         <label class="form-label">Assign Role:</label>
         <select [(ngModel)]="newUser.role" name="role" class="form-control">
           <option value="Student">Student</option>
           <option value="Instructor">Instructor</option>
           <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="form-group" *ngIf="newUser.role === 'Instructor'">
+        <label class="form-label">Assign to Course (Teaching Responsibility):</label>
+        <select [(ngModel)]="newUser.assignedCourseId" name="assignedCourse" class="form-control">
+          <option [ngValue]="null">-- Select Course to Assign (Optional) --</option>
+          <option *ngFor="let c of courses" [ngValue]="c.id">
+            [{{ c.code }}] {{ c.title }}
+          </option>
         </select>
       </div>
 
@@ -93,15 +113,40 @@
         <tr>
           <th>Full Name</th>
           <th>Email</th>
-          <th>Username</th>
+          <th>Role</th>
+          <th>Assigned Course</th>
           <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let user of users">
-          <td>{{ user.firstName }} {{ user.lastName }}</td>
+          <td><strong>{{ user.firstName }} {{ user.lastName }}</strong></td>
           <td>{{ user.email }}</td>
-          <td><code>{{ user.userName }}</code></td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'bg-primary': user.role === 'Admin',
+              'bg-info text-dark': user.role === 'Instructor',
+              'bg-secondary': user.role === 'Student'
+            }">{{ user.role || 'User' }}</span>
+          </td>
+          <td>
+            <div *ngIf="user.role === 'Instructor'">
+              <div *ngIf="user.assignedCourseTitle" class="mb-1">
+                <span class="badge bg-success">📚 {{ user.assignedCourseTitle }}</span>
+              </div>
+              <select 
+                class="form-select form-select-sm mt-1" 
+                style="max-width: 220px;" 
+                (change)="onAssignCourse($any($event.target).value, user.id)"
+              >
+                <option value="">-- Assign/Reassign Course --</option>
+                <option *ngFor="let c of courses" [value]="c.id" [selected]="c.id === user.assignedCourseId">
+                  [{{ c.code }}] {{ c.title }}
+                </option>
+              </select>
+            </div>
+            <span *ngIf="user.role !== 'Instructor'" class="text-muted">—</span>
+          </td>
           <td class="text-end action-cell">
             <button class="btn btn-secondary-sm me-2" (click)="onStartEdit(user)">
               Edit
@@ -112,7 +157,7 @@
           </td>
         </tr>
         <tr *ngIf="users.length === 0">
-          <td colspan="4" class="text-center text-muted py-4">No user accounts found.</td>
+          <td colspan="5" class="text-center text-muted py-4">No user accounts found.</td>
         </tr>
       </tbody>
     </table>

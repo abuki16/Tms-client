@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 
 import { EnrollmentListComponent } from './enrollment-list.component';
 
@@ -9,6 +11,7 @@ describe('EnrollmentListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EnrollmentListComponent],
+      providers: [provideHttpClient(), provideRouter([])]
     }).compileComponents();
 
     fixture = TestBed.createComponent(EnrollmentListComponent);

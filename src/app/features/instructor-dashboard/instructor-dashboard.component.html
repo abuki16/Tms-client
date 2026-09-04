@@ -4,14 +4,14 @@
   <div class="dashboard-header">
     <div class="title-group">
       <h1>Instructor Command Center</h1>
-      <p class="subtitle">Manage course delivery, student progress, and grade submissions seamlessly.</p>
+      <p class="subtitle">Manage assigned course curricula, review approved student enrollments, and submit grades.</p>
     </div>
     <div class="action-buttons">
       <button class="btn-secondary" (click)="refreshData()">
-        <span class="icon">🔄</span> Refresh Data
+        <span class="icon">🔄</span> Refresh
       </button>
       <a routerLink="/instructor/grading" class="btn-primary">
-        <span class="icon">📝</span> Assessment Portal
+        <span class="icon">📝</span> Assessment & Grading Portal
       </a>
       <button class="btn-logout" (click)="authService.logout()">
         <span class="icon">🚪</span> Logout
@@ -19,15 +19,116 @@
     </div>
   </div>
 
-  <!-- Instructor Teaching Focus Card -->
-  <div class="section-card welcome-card">
-    <div class="welcome-content">
-      <div class="welcome-icon">🎓</div>
-      <div>
-        <h3>Welcome to your Teaching Portal</h3>
-        <p>Use the action buttons above to register course assessments, submit and manage semester grades, or review course delivery tools. Enrollment approvals and user management are handled securely by system administrators.</p>
+  <!-- KPI Row for Assigned Courses -->
+  <div class="kpi-row mb-4">
+    <div class="kpi-card">
+      <div class="kpi-icon">📚</div>
+      <div class="kpi-info">
+        <span class="kpi-value">{{ assignedCourses().length }}</span>
+        <span class="kpi-label">My Assigned Courses</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-info">
+        <span class="kpi-value">{{ myCourseEnrollments().length }}</span>
+        <span class="kpi-label">Total Enrolled Students</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-info">
+        <span class="kpi-value">{{ approvedCount() }}</span>
+        <span class="kpi-label">Approved by Admin</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🎓</div>
+      <div class="kpi-info">
+        <span class="kpi-value">{{ gradedCount() }}</span>
+        <span class="kpi-label">Graded Students</span>
       </div>
     </div>
   </div>
+
+  <!-- If No Assigned Courses -->
+  @if (assignedCourses().length === 0 && !isLoadingCourses()) {
+    <div class="section-card alert-card">
+      <div class="alert-content">
+        <span class="alert-icon">ℹ️</span>
+        <div>
+          <h3>No Courses Currently Assigned</h3>
+          <p>You are registered as an Instructor, but the system administrator has not assigned you to manage any courses yet. Once an administrator assigns courses to you in the <strong>User Provisioning</strong> module, your assigned curricula and approved students will appear here.</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Assigned Courses & Enrolled Students Section -->
+  @for (course of assignedCourses(); track course.id) {
+    <div class="section-card course-detail-card mb-4">
+      <div class="card-header-row">
+        <div>
+          <span class="course-code-badge">{{ course.code }}</span>
+          <h2 class="course-title">{{ course.title }}</h2>
+          <span class="text-muted">Course ID: #{{ course.id }} &bull; Max Capacity: {{ course.maxCapacity }}</span>
+        </div>
+        <div class="card-actions">
+          <a routerLink="/instructor/grading" class="btn-primary-sm">
+            ✍️ Open Assessment & Grading Portal
+          </a>
+        </div>
+      </div>
+
+      <!-- Enrolled Students Table for This Course -->
+      <div class="students-section mt-3">
+        <h4>Enrolled Students ({{ getStudentsForCourse(course.id).length }})</h4>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Student ID</th>
+                <th>Enrolled At</th>
+                <th>Admin Approval</th>
+                <th>Submitted Grade</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (enrollment of getStudentsForCourse(course.id); track enrollment.id) {
+                <tr>
+                  <td><strong>{{ enrollment.studentName || 'Student #' + enrollment.studentId }}</strong></td>
+                  <td><code>#{{ enrollment.studentId }}</code></td>
+                  <td>{{ enrollment.enrolledAt | date:'mediumDate' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-success]="enrollment.status === 'Approved'" [class.badge-warning]="enrollment.status === 'Pending'">
+                      {{ enrollment.status }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (enrollment.grade != null) {
+                      <span class="grade-badge">GPA: {{ enrollment.grade | number:'1.1-1' }}</span>
+                    } @else {
+                      <span class="text-muted">Not Graded Yet</span>
+                    }
+                  </td>
+                  <td>
+                    <a routerLink="/instructor/grading" class="btn-sm btn-outline">
+                      Grade Student
+                    </a>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="empty-state">No students have enrolled in this course yet.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
 
 </div>

@@ -221,6 +221,46 @@
   border: 1px solid #dbeafe;
 }
 
+.instructor-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  .instructor-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &.unassigned {
+      background: #f8fafc;
+      color: #94a3b8;
+      border: 1px dashed #cbd5e1;
+    }
+  }
+
+  .select-instructor-sm {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    outline: none;
+
+    &:hover {
+      border-color: #3b82f6;
+    }
+  }
+}
+
 .capacity-info {
   width: 220px;
 

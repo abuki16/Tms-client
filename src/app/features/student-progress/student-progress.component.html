@@ -22,13 +22,15 @@
     </div>
   </div>
 
-  <!-- Real-time sync alert banner -->
-  <div class="alert alert-sync">
-    <span class="alert-icon">⚡</span>
-    <span>
-      Live Sync Active: <strong>{{ store.pendingCount() }}</strong> system-wide enrollment(s) currently pending review.
-    </span>
-  </div>
+  <!-- Real-time student pending notice -->
+  @if (pendingCount() > 0) {
+    <div class="alert alert-sync">
+      <span class="alert-icon">⏳</span>
+      <span>
+        Enrollment Notice: You have <strong>{{ pendingCount() }}</strong> course enrollment request(s) awaiting administrator review.
+      </span>
+    </div>
+  }
 
   <!-- KPI Progress Cards -->
   <div class="kpi-grid">
@@ -43,8 +45,12 @@
     <div class="kpi-card">
       <div class="kpi-icon">📈</div>
       <div class="kpi-details">
-        <span class="kpi-value">{{ gpa() | number:'1.2-2' }}</span>
-        <span class="kpi-label">Cumulative GPA</span>
+        @if (hasOfficialGpa()) {
+          <span class="kpi-value">{{ gpa() | number:'1.2-2' }}</span>
+        } @else {
+          <span class="kpi-value gpa-pending" title="Official GPA is registered upon course completion & certification">In Progress</span>
+        }
+        <span class="kpi-label">Cumulative GPA {{ hasOfficialGpa() ? '' : '(Pending Certification)' }}</span>
       </div>
     </div>
 

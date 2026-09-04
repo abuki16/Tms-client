@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AssessmentService } from '../../services/assessment.service';
 import { AuthService } from '../../services/auth.service';
 import { 
@@ -13,13 +14,13 @@ import {
 @Component({
   selector: 'tms-grade-submission',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './grade-submission.component.html',
   styleUrl: './grade-submission.component.scss'
 })
 export class GradeSubmissionComponent implements OnInit {
   private assessmentService = inject(AssessmentService);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
 
   // Scoped strictly to the instructor's assigned course (e.g., Course ID 1)
   assignedCourseId: number = 1; 

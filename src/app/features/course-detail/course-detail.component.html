@@ -1,5 +1,24 @@
-<div>
-  <h2>Course Detail</h2>
-  <p>Course ID: {{ id() }}</p>
-  <a routerLink="/dashboard">Back to Dashboard</a>
+<div class="course-detail-container">
+  <div class="detail-header">
+    <div class="title-group">
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+      </div>
+      <h2>Course Detail Information</h2>
+      <p class="subtitle">Detailed view for Course Module ID #{{ id() }}</p>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="card detail-card">
+    <h3>Course Information</h3>
+    <p><strong>Course Identifier:</strong> #{{ id() }}</p>
+    <div class="nav-links mt-3">
+      <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Return to Dashboard</a>
+    </div>
+  </div>
 </div>

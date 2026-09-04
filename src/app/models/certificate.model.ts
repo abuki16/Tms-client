@@ -12,6 +12,8 @@ export interface CertificateResponseDto {
   studentName: string;
   courseId: number;
   courseTitle: string;
+  gpa?: number;
+  grade?: number;
   links: LinkDto[];
 }
 
@@ -19,4 +21,5 @@ export interface IssueCertificateRequest {
   studentId: number;
   courseId: number;
   serialNumber: string;
+  grade?: number;
 }

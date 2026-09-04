@@ -64,7 +64,11 @@ export class StudentProgressComponent implements OnInit {
   });
 
   gpa = computed(() => {
-    return this.progressData()?.gpa ?? 3.8;
+    return this.progressData()?.gpa ?? 0;
+  });
+
+  hasOfficialGpa = computed(() => {
+    return this.gpa() > 0;
   });
 
   // Combine store entities with any student progress records

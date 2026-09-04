@@ -1,5 +1,17 @@
 <div class="grading-container">
-  <h2>Instructor Assessment & Grading Portal</h2>
+  <div class="dashboard-header">
+    <div>
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+      </div>
+      <h2>Instructor Assessment & Grading Portal</h2>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
+  </div>
 
   @if (errorMessage) {
     <div class="alert error">{{ errorMessage }}</div>

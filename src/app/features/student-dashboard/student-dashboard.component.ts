@@ -50,6 +50,15 @@ export class StudentDashboardComponent implements OnInit {
     this.earnedCredits() >= 120 ? "Eligible for Graduation" : "In Progress",
   );
 
+  myPendingEnrollments = computed(() => {
+    const sId = this.studentId();
+    return this.store.entities().filter(
+      (e: any) => Number(e.studentId) === sId && e.status === 'Pending'
+    );
+  });
+
+  myPendingCount = computed(() => this.myPendingEnrollments().length);
+
   coursesResource = rxResource({
     stream: () => this.api.getAll(),
   });
@@ -89,7 +98,32 @@ export class StudentDashboardComponent implements OnInit {
     ).length;
   }
 
+  isStudentEnrolledInCourse(course: Course): boolean {
+    const sId = this.studentId();
+    return this.store.entities().some(
+      (e: any) => Number(e.studentId) === sId && 
+                  (Number(e.courseId) === Number(course.id) || 
+                   (e.courseCode && course.code && e.courseCode.trim().toLowerCase() === course.code.trim().toLowerCase())) &&
+                  e.status !== 'Rejected'
+    );
+  }
+
+  getStudentEnrollmentStatus(course: Course): string | null {
+    const sId = this.studentId();
+    const enrollment = this.store.entities().find(
+      (e: any) => Number(e.studentId) === sId && 
+                  (Number(e.courseId) === Number(course.id) || 
+                   (e.courseCode && course.code && e.courseCode.trim().toLowerCase() === course.code.trim().toLowerCase())) &&
+                  e.status !== 'Rejected'
+    );
+    return enrollment ? enrollment.status : null;
+  }
+
   handleEnroll(course: Course) {
+    if (this.isStudentEnrolledInCourse(course)) {
+      return;
+    }
+
     this.selectedCourse.set(course);
    
     // Uses the authenticated student's dynamic ID for the enrollment payload

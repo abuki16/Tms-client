@@ -107,6 +107,131 @@
         </a>
       </div>
     </div>
+  <!-- Enrollments & Submitted Grade Governance Section -->
+  <div class="section-card mt-4">
+    <div class="table-header-row">
+      <div>
+        <h3>Academic Enrollments & Grade Governance</h3>
+        <p class="section-subtitle">Inspect enrolled students, review submitted grades, make administrative corrections, and issue verified certificates.</p>
+      </div>
+      <a routerLink="/enrollments" class="btn-link">View All Enrollments ({{ store.entities().length }}) →</a>
+    </div>
+
+    @if (store.isLoading()) {
+      <p class="loading-hint">Loading enrollment data...</p>
+    } @else if (store.entities().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">👥</span>
+        <p>No student enrollments recorded yet.</p>
+      </div>
+    } @else {
+      <div class="table-responsive mt-3">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course</th>
+              <th>Status</th>
+              <th>Submitted Grade</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (enrollment of store.entities().slice(0, 8); track enrollment.id) {
+              <tr>
+                <td>
+                  <strong>{{ enrollment.studentName || 'Student #' + enrollment.studentId }}</strong>
+                  <div class="meta-sub">ID: #{{ enrollment.studentId }}</div>
+                </td>
+                <td>
+                  <span>{{ enrollment.courseName }}</span>
+                  @if (enrollment.courseCode) {
+                    <span class="badge-code">{{ enrollment.courseCode }}</span>
+                  }
+                </td>
+                <td>
+                  <span class="status-pill" [class.status-approved]="enrollment.status === 'Approved'" [class.status-pending]="enrollment.status === 'Pending'">
+                    {{ enrollment.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (editingEnrollmentId === enrollment.id) {
+                    <div class="inline-grade-editor">
+                      <input 
+                        type="number" 
+                        [(ngModel)]="editingGradeValue" 
+                        min="0" 
+                        max="4.0" 
+                        step="0.05" 
+                        class="grade-input"
+                      />
+                      <button 
+                        type="button" 
+                        class="btn-save-sm" 
+                        [disabled]="isUpdatingGrade" 
+                        (click)="saveGrade(enrollment)"
+                        title="Save Correction"
+                      >
+                        ✓
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn-cancel-sm" 
+                        (click)="cancelEditGrade()"
+                        title="Cancel"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="grade-cell">
+                      @if (enrollment.grade != null) {
+                        <span class="grade-pill graded">
+                          ⭐ {{ enrollment.grade | number:'1.2-2' }}
+                        </span>
+                      } @else {
+                        <span class="grade-pill ungraded">
+                          ⏳ Pending
+                        </span>
+                      }
+                      <button 
+                        type="button" 
+                        class="btn-edit-sm" 
+                        (click)="startEditGrade(enrollment)" 
+                        title="Correct or Update Grade"
+                      >
+                        ✏️ Edit
+                      </button>
+                    </div>
+                  }
+                </td>
+                <td class="action-cell">
+                  @if (enrollment.status === 'Pending') {
+                    <button class="btn-approve-sm" (click)="store.approveEnrollment(+enrollment.id)">
+                      Approve
+                    </button>
+                  }
+                  @if (enrollment.status === 'Approved' && enrollment.grade != null) {
+                    <a 
+                      class="btn-cert-sm" 
+                      [routerLink]="['/admin/certificates']" 
+                      [queryParams]="{ studentId: enrollment.studentId, courseId: enrollment.courseId }"
+                      title="Issue official completion certificate"
+                    >
+                      🎓 Issue Certificate
+                    </a>
+                  } @else if (enrollment.status === 'Approved' && enrollment.grade == null) {
+                    <span class="awaiting-grade" title="Grade submission required before certificate can be issued">
+                      🔒 Awaiting Grade
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </div>
 
 </div>

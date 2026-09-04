@@ -1,0 +1,49 @@
+.course-detail-container {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: inherit;
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h2 {
+      margin: 0;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      color: #64748b;
+      margin: 4px 0 0 0;
+    }
+
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  }
+
+  .detail-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: #1e293b;
+    }
+  }
+
+  .mt-3 {
+    margin-top: 1rem;
+  }
+}

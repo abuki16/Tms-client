@@ -1,10 +1,20 @@
 <div class="admin-panel-container">
   <div class="panel-header">
-    <div class="title-row">
-      <h2>Certificate Governance & Issuance Portal</h2>
-      <span class="role-pill">Administrator Access</span>
+    <div class="header-content">
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+      </div>
+      <div class="title-row">
+        <h2>Certificate Governance & Issuance Portal</h2>
+        <span class="role-pill">Administrator Access</span>
+      </div>
+      <p class="subtitle">Issue official institutional completion certificates by selecting students and auto-fetching their academic records.</p>
     </div>
-    <p class="subtitle">Issue official institutional completion certificates by selecting students and auto-fetching their academic records.</p>
+    <div class="header-actions">
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
   </div>
 
   @if (errorMessage) {
@@ -56,7 +66,13 @@
               <div class="summary-name">{{ student.name }}</div>
               <div class="summary-tags">
                 <span class="tag-reg">Reg: {{ student.registrationNumber || ('TMS-2026-' + student.id) }}</span>
-                <span class="tag-gpa">GPA: {{ (student.gpa ?? 3.8) | number:'1.2-2' }}</span>
+                <span class="tag-gpa">
+                  @if (studentCumulativeGpa() > 0) {
+                    GPA: {{ studentCumulativeGpa() | number:'1.2-2' }} ({{ studentFinishedCoursesCount() }} Finished Course{{ studentFinishedCoursesCount() === 1 ? '' : 's' }} - Active Study)
+                  } @else {
+                    GPA: In Progress (Pending Course Completion)
+                  }
+                </span>
                 @if (studentEnrollments().length > 0) {
                   <span class="tag-enrollments">{{ studentEnrollments().length }} Enrolled Course(s)</span>
                 }
@@ -69,7 +85,7 @@
         <div class="form-group">
           <label for="courseSelect">Select Course to Certify:</label>
           <select 
-            id="courseSelect"
+            id="courseSelect" 
             class="form-control" 
             [ngModel]="newCert.courseId" 
             (ngModelChange)="onSelectCourse($event)"
@@ -81,7 +97,8 @@
               <optgroup label="Student's Enrolled Courses">
                 @for (enroll of studentEnrollments(); track enroll.id) {
                   <option [value]="enroll.courseId">
-                    ⭐ {{ enroll.courseTitle || enroll.courseName || ('Course #' + enroll.courseId) }} (Status: {{ enroll.status }})
+                    {{ enroll.grade != null && enroll.grade >= 2.0 ? '✅ [Grade: ' + (enroll.grade | number:'1.2-2') + ' (' + getLetterGrade(enroll.grade) + ') - Eligible]' : (enroll.grade != null ? '❌ [Grade: ' + (enroll.grade | number:'1.2-2') + ' - Failing]' : '⏳ [No Grade - Ineligible]') }} 
+                    - {{ enroll.courseTitle || enroll.courseName || ('Course #' + enroll.courseId) }} (Status: {{ enroll.status }})
                   </option>
                 }
               </optgroup>
@@ -95,6 +112,105 @@
             </optgroup>
           </select>
         </div>
+
+        <!-- Grade & Course Completion Status Feedback & Admin Grade Governance -->
+        @if (newCert.courseId && newCert.studentId) {
+          @if (isAlreadyIssued()) {
+            <div class="validation-status-box status-ineligible mb-3">
+              <span class="status-icon">⚠️</span>
+              <div class="status-text">
+                <strong>Certificate Already Issued</strong>
+                <span>An official completion certificate has already been issued to this student for this course.</span>
+              </div>
+            </div>
+          }
+
+          @if (selectedEnrollment(); as enroll) {
+            <!-- Admin Grade Governance & Verification Widget -->
+            <div class="admin-grade-governance-box mt-3 mb-3">
+              <div class="grade-gov-header">
+                <span class="gov-icon">⚖️</span>
+                <div>
+                  <strong>Course Grade Governance (Instructor & Admin)</strong>
+                  <p class="gov-subtext">Review the grade submitted by the instructor and adjust or correct if necessary before official certification.</p>
+                </div>
+              </div>
+              
+              <div class="grade-gov-body">
+                <div class="grade-current-display">
+                  <span class="grade-label">Instructor-Submitted Grade:</span>
+                  @if (enroll.grade != null) {
+                    <span class="grade-pill-highlight" [class.passing]="enroll.grade >= 2.0" [class.failing]="enroll.grade < 2.0">
+                      ⭐ {{ enroll.grade | number:'1.2-2' }} ({{ getLetterGrade(enroll.grade) }})
+                      {{ enroll.grade >= 2.0 ? '— Passing' : '— Failing' }}
+                    </span>
+                  } @else {
+                    <span class="grade-pill-pending">⏳ Awaiting Instructor Grade Submission</span>
+                  }
+                </div>
+
+                <div class="admin-edit-row">
+                  <label for="adminGradeInput">Verified / Corrected Grade (0.00 - 4.00):</label>
+                  <div class="input-with-action">
+                    <input 
+                      id="adminGradeInput"
+                      type="number" 
+                      [(ngModel)]="editingGradeValue" 
+                      name="adminGradeValue"
+                      min="0" 
+                      max="4.0" 
+                      step="0.05" 
+                      class="form-control font-mono" 
+                      placeholder="e.g. 3.75"
+                    />
+                    <button 
+                      type="button" 
+                      class="btn-secondary-sm" 
+                      [disabled]="isSavingGrade() || editingGradeValue === null" 
+                      (click)="saveAdminGrade()"
+                      title="Save verified grade directly to enrollment record"
+                    >
+                      @if (isSavingGrade()) {
+                        <span>Saving...</span>
+                      } @else {
+                        <span>💾 Save Grade</span>
+                      }
+                    </button>
+                  </div>
+                  @if (gradeSaveSuccess()) {
+                    <span class="text-success-hint">✅ Verified grade saved and registered for this certificate.</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @if (isEligibleForCertificate()) {
+              <div class="validation-status-box status-eligible">
+                <span class="status-icon">✅</span>
+                <div class="status-text">
+                  <strong>Eligible for Institutional Certification</strong>
+                  <span>Course completed with verified grade of <strong>{{ (editingGradeValue ?? enroll.grade) | number:'1.2-2' }} ({{ getLetterGrade(editingGradeValue ?? enroll.grade) }})</strong>.</span>
+                </div>
+              </div>
+            } @else {
+              <div class="validation-status-box status-ineligible">
+                <span class="status-icon">⚠️</span>
+                <div class="status-text">
+                  <strong>Certificate Cannot Be Issued (Passing Grade Required)</strong>
+                  <span>A verified passing grade of at least <strong>2.00 (Grade C / 50% score)</strong> is required for official certificate generation.</span>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="validation-status-box status-ineligible">
+              <span class="status-icon">🚫</span>
+              <div class="status-text">
+                <strong>Not Enrolled in Course</strong>
+                <span>Student is not enrolled in this course. Certificates can only be issued for completed enrolled courses.</span>
+              </div>
+            </div>
+          }
+        }
 
         <!-- 3. Standardized Serial Number with Auto-generate -->
         <div class="form-group">
@@ -125,10 +241,14 @@
         <button 
           type="submit" 
           class="btn-primary mt-2" 
-          [disabled]="isIssuing() || !newCert.studentId || !newCert.courseId"
+          [disabled]="isIssuing() || !newCert.studentId || !newCert.courseId || !isEligibleForCertificate() || isAlreadyIssued()"
         >
           @if (isIssuing()) {
             <span class="spinner-sm"></span> Generating Certificate...
+          } @else if (isAlreadyIssued()) {
+            🔒 Certificate Already Issued
+          } @else if (!isEligibleForCertificate() && newCert.courseId) {
+            🔒 Incomplete - Passing Grade (>= 2.00) Required
           } @else {
             🎓 Generate & Issue Certificate
           }
@@ -228,6 +348,14 @@
                 <div class="cert-detail-item">
                   <span class="detail-label">Serial Number:</span>
                   <span class="detail-value"><code>{{ cert.serialNumber }}</code></span>
+                </div>
+                <div class="cert-detail-item">
+                  <span class="detail-label">Course Grade:</span>
+                  <span class="detail-value">⭐ {{ (cert.grade ?? editingGradeValue ?? selectedEnrollment()?.grade ?? 4.0) | number:'1.2-2' }} ({{ getLetterGrade(cert.grade ?? editingGradeValue ?? selectedEnrollment()?.grade) }})</span>
+                </div>
+                <div class="cert-detail-item">
+                  <span class="detail-label">Official Cumulative GPA:</span>
+                  <span class="detail-value">🎓 {{ (cert.gpa ?? (studentCumulativeGpa() > 0 ? studentCumulativeGpa() : 4.0)) | number:'1.2-2' }}</span>
                 </div>
                 <div class="cert-detail-item">
                   <span class="detail-label">Issue Date:</span>

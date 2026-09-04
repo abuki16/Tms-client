@@ -40,15 +40,29 @@
 
  
 
-  <!-- Dashboard summary widget showing pending count -->
-
+  <!-- Dashboard summary widget showing student's own pending enrollments -->
   <div class="alert alert-info">
-
     <span class="alert-icon">ℹ️</span>
-
-    <span>Pending Enrollments Needing Review: <strong>{{ store.pendingCount() }}</strong></span>
-
+    <span>Your Pending Enrollments Needing Review: <strong>{{ myPendingCount() }}</strong></span>
   </div>
+
+  @if (myPendingCount() > 0) {
+    <div class="pending-section">
+      <div class="pending-header">
+        <span class="pending-badge">⏳ Under Review</span>
+        <strong>Your Pending Course Registrations ({{ myPendingCount() }}):</strong>
+      </div>
+      <div class="pending-items-grid">
+        @for (item of myPendingEnrollments(); track item.id) {
+          <div class="pending-item-card">
+            <span class="item-code">{{ item.courseCode || ('Course #' + item.courseId) }}</span>
+            <span class="item-name">{{ item.courseName || 'Enrollment request' }}</span>
+            <span class="status-tag">Awaiting Admin Approval</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
 
 
 
@@ -107,11 +121,10 @@
          
 
           <tms-course-card
-
             [course]="course"
-
+            [isEnrolled]="isStudentEnrolledInCourse(course)"
+            [enrollmentStatus]="getStudentEnrollmentStatus(course)"
             (enrollClicked)="handleEnroll($event)">
-
           </tms-course-card>
 
         </div>

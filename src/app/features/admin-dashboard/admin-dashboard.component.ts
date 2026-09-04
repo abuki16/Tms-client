@@ -45,6 +45,11 @@ export class AdminDashboardComponent implements OnInit {
   // Edit mode state
   editingUser: UpdateUserDto | null = null;
 
+  // Grade oversight state
+  editingEnrollmentId: number | null = null;
+  editingGradeValue = 3.5;
+  isUpdatingGrade = false;
+
   ngOnInit() {
     this.refreshData();
   }
@@ -113,6 +118,40 @@ export class AdminDashboardComponent implements OnInit {
         }
       });
     }
+  }
+
+  startEditGrade(enrollment: any) {
+    this.editingEnrollmentId = Number(enrollment.id);
+    this.editingGradeValue = enrollment.grade ?? 3.5;
+  }
+
+  cancelEditGrade() {
+    this.editingEnrollmentId = null;
+  }
+
+  saveGrade(enrollment: any) {
+    if (this.editingGradeValue < 0 || this.editingGradeValue > 4.0) {
+      this.showSnackbar('Grade must be between 0.00 and 4.00.', 'error-snackbar');
+      return;
+    }
+
+    this.isUpdatingGrade = true;
+    const newGrade = Math.round(this.editingGradeValue * 100) / 100;
+
+    this.http.put(`/api/grades/enrollments/${enrollment.id}`, { grade: newGrade }).subscribe({
+      next: () => {
+        this.isUpdatingGrade = false;
+        enrollment.grade = newGrade;
+        this.editingEnrollmentId = null;
+        this.showSnackbar(`Grade corrected to ${newGrade.toFixed(2)} for ${enrollment.studentName || 'student'}.`, 'success-snackbar');
+        this.store.loadEnrollments();
+      },
+      error: (err) => {
+        this.isUpdatingGrade = false;
+        const msg = err.error?.message || 'Failed to update grade.';
+        this.showSnackbar(msg, 'error-snackbar');
+      }
+    });
   }
 
   private showSnackbar(message: string, panelClass: string) {

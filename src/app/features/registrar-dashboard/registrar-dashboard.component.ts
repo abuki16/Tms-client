@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RegistrarService } from '../../services/registrar.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'tms-registrar-dashboard',
@@ -12,6 +13,7 @@ import { RegistrarService } from '../../services/registrar.service';
 })
 export class RegistrarDashboardComponent implements OnInit {
   private registrarService = inject(RegistrarService);
+  public authService = inject(AuthService);
 
   highGpaCount = signal<number>(0);
   coursesByEnrollment = signal<{ title: string; enrollmentCount: number }[]>([]);

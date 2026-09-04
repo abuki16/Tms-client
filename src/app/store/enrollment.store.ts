@@ -85,12 +85,16 @@ export const EnrollmentStore = signalStore(
               
             //   patchState(store, addEntity(createdEnrollment));
             // }),
-            tap((createdEnrollment: Enrollment) => {
+            tap((createdEnrollment: any) => {
               // Normalize the response to match store entity types and filter rules
+              const normId = Number(createdEnrollment?.id || createdEnrollment?.enrollmentId || Date.now());
               const normalizedEnrollment: Enrollment = {
                 ...createdEnrollment,
-                id: Number(createdEnrollment.id), // Ensure ID is a number
-                status: 'Pending'                 // Force status to match filter criteria
+                id: normId,
+                studentId: Number(createdEnrollment?.studentId || request.studentId),
+                courseCode: createdEnrollment?.courseCode || request.courseCode,
+                status: 'Pending',
+                enrolledAt: createdEnrollment?.enrolledAt || new Date().toISOString()
               };
 
               // Instantly add the entity to the store state

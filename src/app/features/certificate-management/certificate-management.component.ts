@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 export interface StudentOption {
   id: number;
@@ -22,6 +24,7 @@ export interface IssueCertificateRequest {
   studentId: number;
   courseId: number;
   serialNumber: string;
+  grade?: number;
 }
 
 export interface CertificateResponseDto {
@@ -32,18 +35,22 @@ export interface CertificateResponseDto {
   studentName: string;
   courseId: number;
   courseTitle: string;
+  gpa?: number;
+  grade?: number;
   links?: any[];
 }
 
 @Component({
   selector: 'tms-certificate-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './certificate-management.component.html',
   styleUrl: './certificate-management.component.scss'
 })
 export class CertificateManagementComponent implements OnInit {
   private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  public authService = inject(AuthService);
   private baseUrl = '/api/Certificates';
 
   // State signals
@@ -57,6 +64,91 @@ export class CertificateManagementComponent implements OnInit {
   isLoadingStudents = signal(false);
   isLoadingCourses = signal(false);
   isIssuing = signal(false);
+
+  selectedStudentId = signal<number>(0);
+  selectedCourseId = signal<number>(0);
+
+  // Selected enrollment for the currently chosen student & course
+  selectedEnrollment = computed(() => {
+    const list = this.studentEnrollments();
+    const cId = this.selectedCourseId() || Number(this.newCert.courseId);
+    if (!cId) return null;
+    return list.find(e => Number(e.courseId) === cId) || null;
+  });
+
+  editingGradeValue: number | null = null;
+  isSavingGrade = signal(false);
+  gradeSaveSuccess = signal(false);
+
+  // Dynamically calculate the student's cumulative GPA strictly from their finished graded courses!
+  studentFinishedCoursesCount = computed(() => {
+    return this.studentEnrollments().filter(e => e.grade !== null && e.grade !== undefined && Number(e.grade) >= 2.0).length;
+  });
+
+  studentCumulativeGpa = computed(() => {
+    const graded = this.studentEnrollments().filter(e => e.grade !== null && e.grade !== undefined && Number(e.grade) > 0);
+    if (graded.length === 0) return 0;
+    const avg = graded.reduce((sum, e) => sum + Number(e.grade), 0) / graded.length;
+    return Math.round(avg * 100) / 100;
+  });
+
+  // Certificate can only be issued if the student completed the course with a submitted passing grade (>= 2.00)
+  isEligibleForCertificate = computed(() => {
+    const enroll = this.selectedEnrollment();
+    if (!enroll) return false;
+    const g = this.editingGradeValue !== null ? Number(this.editingGradeValue) : (enroll.grade !== null && enroll.grade !== undefined ? Number(enroll.grade) : null);
+    return g !== null && g >= 2.00;
+  });
+
+  // Check if certificate already issued for this student & course
+  isAlreadyIssued = computed(() => {
+    const sId = this.selectedStudentId() || Number(this.newCert.studentId);
+    const cId = this.selectedCourseId() || Number(this.newCert.courseId);
+    if (!sId || !cId) return false;
+    return this.studentCertificates().some(c => Number(c.courseId) === cId && Number(c.studentId) === sId);
+  });
+
+  getLetterGrade(gradePoint: number | null | undefined): string {
+    if (gradePoint === null || gradePoint === undefined) return '—';
+    const gp = Number(gradePoint);
+    if (gp >= 4.00) return 'A+ / A';
+    if (gp >= 3.75) return 'A-';
+    if (gp >= 3.50) return 'B+';
+    if (gp >= 3.00) return 'B';
+    if (gp >= 2.75) return 'B-';
+    if (gp >= 2.50) return 'C+';
+    if (gp >= 2.00) return 'C';
+    return 'Fail';
+  }
+
+  saveAdminGrade() {
+    const enroll = this.selectedEnrollment();
+    if (!enroll) {
+      this.errorMessage = 'No active enrollment record found for this course.';
+      return;
+    }
+    if (this.editingGradeValue === null || isNaN(Number(this.editingGradeValue)) || Number(this.editingGradeValue) < 0 || Number(this.editingGradeValue) > 4.0) {
+      this.errorMessage = 'Invalid grade: Grade must be between 0.00 and 4.00.';
+      return;
+    }
+
+    this.isSavingGrade.set(true);
+    this.errorMessage = '';
+    const newGrade = Math.round(Number(this.editingGradeValue) * 100) / 100;
+
+    this.http.put(`/api/grades/enrollments/${enroll.id}`, { grade: newGrade }).subscribe({
+      next: () => {
+        this.isSavingGrade.set(false);
+        enroll.grade = newGrade;
+        this.gradeSaveSuccess.set(true);
+        this.successMessage = `Grade successfully verified and updated to ${newGrade.toFixed(2)} (${this.getLetterGrade(newGrade)})!`;
+      },
+      error: (err) => {
+        this.isSavingGrade.set(false);
+        this.errorMessage = err.error?.detail || err.error?.message || 'Failed to update grade.';
+      }
+    });
+  }
 
   // Certificate Preview Modal
   previewCertificate = signal<CertificateResponseDto | null>(null);
@@ -78,6 +170,19 @@ export class CertificateManagementComponent implements OnInit {
   ngOnInit() {
     this.loadStudents();
     this.loadCourses();
+
+    // Check query params if navigated from admin dashboard or enrollment list
+    this.route.queryParams.subscribe(params => {
+      if (params['studentId']) {
+        const sId = Number(params['studentId']);
+        this.onSelectStudent(sId);
+      }
+      if (params['courseId']) {
+        const cId = Number(params['courseId']);
+        this.newCert.courseId = cId;
+        this.onSelectCourse(cId);
+      }
+    });
   }
 
   loadStudents() {
@@ -111,6 +216,7 @@ export class CertificateManagementComponent implements OnInit {
 
   onSelectStudent(studentIdVal: any) {
     const sId = Number(studentIdVal);
+    this.selectedStudentId.set(sId);
     if (!sId) {
       this.selectedStudent.set(null);
       this.newCert.studentId = 0;
@@ -157,8 +263,19 @@ export class CertificateManagementComponent implements OnInit {
   onSelectCourse(courseIdVal: any) {
     const cId = Number(courseIdVal);
     this.newCert.courseId = cId;
+    this.selectedCourseId.set(cId);
     const found = this.courses().find(c => c.id === cId);
     this.selectedCourse.set(found || null);
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.gradeSaveSuccess.set(false);
+
+    const enroll = this.selectedEnrollment();
+    if (enroll && enroll.grade !== null && enroll.grade !== undefined) {
+      this.editingGradeValue = Number(enroll.grade);
+    } else {
+      this.editingGradeValue = null;
+    }
   }
 
   onIssueCertificate() {
@@ -175,6 +292,29 @@ export class CertificateManagementComponent implements OnInit {
       return;
     }
 
+    if (this.isAlreadyIssued()) {
+      this.errorMessage = 'A certificate has already been issued to this student for this course.';
+      return;
+    }
+
+    // Strict validation: Verify student has finished the course with a submitted grade
+    const enroll = this.studentEnrollments().find(e => Number(e.courseId) === Number(this.newCert.courseId));
+    if (!enroll) {
+      this.errorMessage = 'Certificate cannot be generated: The selected student is not enrolled in this course.';
+      return;
+    }
+
+    const currentGrade = this.editingGradeValue !== null ? Number(this.editingGradeValue) : (enroll.grade !== null && enroll.grade !== undefined ? Number(enroll.grade) : null);
+    if (currentGrade === null || isNaN(currentGrade)) {
+      this.errorMessage = 'Certificate cannot be generated: The student has not completed this course with a submitted grade. The instructor must submit a grade before an official certificate can be issued.';
+      return;
+    }
+    if (currentGrade < 2.00) {
+      this.errorMessage = 'Certificate cannot be generated: The student has not completed this course with a passing submitted grade (minimum 2.00 / C).';
+      return;
+    }
+
+    this.newCert.grade = currentGrade;
     this.isIssuing.set(true);
     this.errorMessage = '';
     this.successMessage = '';
@@ -195,7 +335,7 @@ export class CertificateManagementComponent implements OnInit {
       },
       error: (err) => {
         this.isIssuing.set(false);
-        this.errorMessage = err.error?.message || err.error || 'Failed to issue certificate. Verify that the student and course IDs exist, and ensure unique serial number.';
+        this.errorMessage = err.error?.detail || err.error?.message || (typeof err.error === 'string' ? err.error : 'Failed to issue certificate. Verify that the student and course IDs exist, and ensure unique serial number.');
         this.successMessage = '';
       }
     });

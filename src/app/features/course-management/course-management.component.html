@@ -8,7 +8,10 @@
     </div>
     <div class="action-buttons">
       <button class="btn-primary" (click)="openCreateModal()">➕ Add New Course</button>
-      <a routerLink="/admin-dashboard" class="btn-outline">🔙 Admin Command Center</a>
+      <a [routerLink]="authService.getDashboardRoute()" class="btn-outline">← Back to Dashboard</a>
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
     </div>
   </div>
 
@@ -43,6 +46,7 @@
         <tr>
           <th>Code</th>
           <th>Course Title</th>
+          <th>Assigned Instructor</th>
           <th>Capacity & Utilization</th>
           <th class="text-right">Actions</th>
         </tr>
@@ -52,6 +56,30 @@
           <tr>
             <td><span class="badge-code">{{ course.code }}</span></td>
             <td><strong>{{ course.title }}</strong></td>
+            <td>
+              <div class="instructor-cell">
+                @if (course.instructorId) {
+                  <span class="instructor-badge">
+                    👨‍🏫 {{ getInstructorName(course.instructorId) }}
+                  </span>
+                } @else {
+                  <span class="instructor-badge unassigned">
+                    ⚪ Unassigned
+                  </span>
+                }
+                <select 
+                  class="select-instructor-sm" 
+                  [ngModel]="course.instructorId || ''"
+                  (ngModelChange)="assignInstructor(course.id, $event)"
+                  title="Assign or change instructor"
+                >
+                  <option value="">-- Change Instructor --</option>
+                  @for (instr of instructors(); track instr.id) {
+                    <option [value]="instr.id">{{ instr.name }}</option>
+                  }
+                </select>
+              </div>
+            </td>
             <td>
               <div class="capacity-info">
                 <div class="capacity-text">
@@ -108,7 +136,7 @@
         <form (submit)="$event.preventDefault(); createCourse()">
           <div class="form-group">
             <label>Course Code</label>
-            <input type="text" [(ngModel)]="newCourse.code" name="code" required class="form-control" placeholder="e.g. CSE-101" />
+            <input type="text" [(ngModel)]="newCourse.code" name="code" required class="form-control" placeholder="e.g. CSE-101, AI-101" />
           </div>
           <div class="form-group">
             <label>Course Title</label>
@@ -117,6 +145,15 @@
           <div class="form-group">
             <label>Maximum Capacity</label>
             <input type="number" [(ngModel)]="newCourse.maxCapacity" name="maxCapacity" required min="1" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Assign Instructor (Optional)</label>
+            <select [(ngModel)]="newCourse.instructorId" name="instructorId" class="form-control">
+              <option value="">-- No Instructor Assigned --</option>
+              @for (instr of instructors(); track instr.id) {
+                <option [value]="instr.id">👨‍🏫 {{ instr.name }} ({{ instr.email }})</option>
+              }
+            </select>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-outline" (click)="showCreateModal.set(false)">Cancel</button>
@@ -147,6 +184,15 @@
           <div class="form-group">
             <label>Maximum Capacity</label>
             <input type="number" [(ngModel)]="editCourseData.maxCapacity" name="maxCapacity" required min="1" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Assigned Instructor</label>
+            <select [(ngModel)]="editCourseData.instructorId" name="instructorId" class="form-control">
+              <option value="">-- No Instructor Assigned --</option>
+              @for (instr of instructors(); track instr.id) {
+                <option [value]="instr.id">👨‍🏫 {{ instr.name }} ({{ instr.email }})</option>
+              }
+            </select>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-outline" (click)="showEditModal.set(false)">Cancel</button>

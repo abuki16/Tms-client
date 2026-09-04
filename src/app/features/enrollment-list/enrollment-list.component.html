@@ -1,11 +1,31 @@
-<h2>Enrollment Records</h2>
+<div class="enrollments-header">
+  <div>
+    <div class="header-breadcrumbs">
+      <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+    </div>
+    <h2>Enrollment & Academic Grade Governance</h2>
+    <p class="subtitle">Oversee course enrollments, review instructor-submitted grades, correct grades, and issue verified completion certificates.</p>
+  </div>
+  <div class="header-actions">
+    <a routerLink="/admin/certificates" class="btn-cert-nav">📜 Certificate Governance</a>
+    <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+      <span class="icon">🚪</span> Logout
+    </button>
+  </div>
+</div>
 
 @if (store.isLoading()) {
-  <div>Loading enrollments...</div>
+  <div class="loading-bar">Loading enrollments...</div>
 }
 
 @if (store.error()) {
   <div class="error-message">{{ store.error() }}</div>
+}
+
+@if (gradeMessage(); as msg) {
+  <div class="feedback-alert" [class.alert-error]="msg.isError" [class.alert-success]="!msg.isError">
+    {{ msg.isError ? '⚠️' : '✅' }} {{ msg.text }}
+  </div>
 }
 
 <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
@@ -13,28 +33,118 @@
   <!-- Student Name Column -->
   <ng-container matColumnDef="studentName">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Student</th>
-    <td mat-cell *matCellDef="let row"> {{ row.studentName }} </td>
+    <td mat-cell *matCellDef="let row">
+      <div class="student-cell">
+        <strong>{{ row.studentName }}</strong>
+        <span class="sub-id">#{{ row.studentId }}</span>
+      </div>
+    </td>
   </ng-container>
 
   <!-- Course Name Column -->
   <ng-container matColumnDef="courseName">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Course</th>
-    <td mat-cell *matCellDef="let row"> {{ row.courseName }} </td>
+    <td mat-cell *matCellDef="let row">
+      <div class="course-cell">
+        <span>{{ row.courseName }}</span>
+        @if (row.courseCode) {
+          <span class="badge-code">{{ row.courseCode }}</span>
+        }
+      </div>
+    </td>
   </ng-container>
 
   <!-- Status Column -->
   <ng-container matColumnDef="status">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-    <td mat-cell *matCellDef="let row"> {{ row.status }} </td>
+    <td mat-cell *matCellDef="let row">
+      <span class="status-pill" [class.status-approved]="row.status === 'Approved'" [class.status-pending]="row.status === 'Pending'">
+        {{ row.status }}
+      </span>
+    </td>
+  </ng-container>
+
+  <!-- Grade Column -->
+  <ng-container matColumnDef="grade">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Grade & Evaluation</th>
+    <td mat-cell *matCellDef="let row">
+      @if (editingEnrollmentId() === row.id) {
+        <div class="inline-grade-editor">
+          <input 
+            type="number" 
+            [(ngModel)]="editingGradeValue" 
+            min="0" 
+            max="4.0" 
+            step="0.05" 
+            class="grade-input"
+          />
+          <button 
+            type="button" 
+            class="btn-save-grade" 
+            [disabled]="isUpdatingGrade()" 
+            (click)="saveGrade(row)"
+            title="Save Grade Correction"
+          >
+            ✓
+          </button>
+          <button 
+            type="button" 
+            class="btn-cancel-grade" 
+            (click)="cancelEditGrade()"
+            title="Cancel"
+          >
+            ✕
+          </button>
+        </div>
+      } @else {
+        <div class="grade-display-row">
+          @if (row.grade != null) {
+            <span class="grade-pill graded">
+              ⭐ {{ row.grade | number:'1.2-2' }}
+            </span>
+          } @else {
+            <span class="grade-pill ungraded">
+              ⏳ Pending
+            </span>
+          }
+          <button 
+            type="button" 
+            class="btn-edit-inline" 
+            (click)="startEditGrade(row)" 
+            title="Correct or Update Grade"
+          >
+            ✏️
+          </button>
+        </div>
+      }
+    </td>
   </ng-container>
 
   <!-- Actions Column -->
   <ng-container matColumnDef="actions">
-    <th mat-header-cell *matHeaderCellDef>Actions</th>
+    <th mat-header-cell *matHeaderCellDef>Governance Actions</th>
     <td mat-cell *matCellDef="let row">
-      @if (row.status === 'Pending') {
-        <button mat-button color="primary" (click)="store.approveEnrollment(row.id)">Approve</button>
-      }
+      <div class="actions-cell-wrapper">
+        @if (row.status === 'Pending') {
+          <button mat-button color="primary" class="btn-approve-sm" (click)="store.approveEnrollment(row.id)">
+            Approve
+          </button>
+        }
+        @if (row.status === 'Approved' && row.grade != null) {
+          <a 
+            class="btn-issue-cert-sm" 
+            [routerLink]="['/admin/certificates']" 
+            [queryParams]="{ studentId: row.studentId, courseId: row.courseId }"
+            title="Issue official completion certificate"
+          >
+            🎓 Issue Certificate
+          </a>
+        } @else if (row.status === 'Approved' && row.grade == null) {
+          <span class="awaiting-grade-hint" title="Grade must be submitted before certificate issuance">
+            🔒 Awaiting Grade
+          </span>
+        }
+      </div>
     </td>
   </ng-container>
 

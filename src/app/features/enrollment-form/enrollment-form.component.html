@@ -1,4 +1,18 @@
-<h2>Course Enrollment</h2>
+<div class="enrollment-form-container">
+  <div class="form-header">
+    <div>
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+      </div>
+      <h2>Course Enrollment Application</h2>
+      <p class="subtitle">Submit formal course enrollment request for administrative processing.</p>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
+  </div>
 
 @if (submitted()) {
   <div class="success">
@@ -59,7 +73,7 @@
 
     <hr />
 
-    <!-- [disabled]="form.invalid" disables the button when ANY field fails validation. -->
     <button type="submit" [disabled]="form.invalid">Confirm Enrollment</button>
   </form>
 }
+</div>

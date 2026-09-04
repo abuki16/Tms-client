@@ -1,118 +1,435 @@
 <div class="grading-container">
-  <h2>Instructor Assessment & Grading Portal</h2>
-
-  @if (errorMessage) {
-    <div class="alert error">{{ errorMessage }}</div>
-  }
-  @if (successMessage) {
-    <div class="alert success">{{ successMessage }}</div>
-  }
-
-  <!-- 1. Register New Assessment Form -->
-  <div class="card mb-4">
-    <h3>Register New Assessment</h3>
-    <form (submit)="$event.preventDefault(); onCreateAssessment()" class="inline-form">
-      <div class="form-group" style="flex: 2;">
-        <label>Title:</label>
-        <input type="text" [(ngModel)]="newAssessment.title" name="asmTitle" placeholder="e.g., Midterm Exam" required class="form-control" />
+  
+  <!-- Header Navigation -->
+  <div class="grading-header">
+    <div class="title-group">
+      <div class="header-breadcrumbs">
+        <a [routerLink]="authService.getDashboardRoute()" class="btn-back">← Back to Dashboard</a>
+        <span class="portal-badge">Instructor Assessment & Grading Portal</span>
       </div>
-      <div class="form-group" style="flex: 1;">
-        <label>Max Score:</label>
-        <input type="number" [(ngModel)]="newAssessment.maxScore" name="asmMax" placeholder="100" required class="form-control" />
-      </div>
-      <div class="form-group" style="flex: 1;">
-        <label>Weight:</label>
-        <input type="number" step="0.01" [(ngModel)]="newAssessment.weight" name="asmWeight" placeholder="0.30" required class="form-control" />
-      </div>
-      <div style="align-self: flex-end;">
-        <button type="submit" class="btn-primary">Register</button>
-      </div>
-    </form>
+      <h2>Standard Course Assessment & Student Gradebook</h2>
+      <p class="subtitle">Standardized 100% academic evaluation (Continuous 20% + Midterm 30% + Final 50%) with progressive grade submission and GPA computation.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-logout" (click)="authService.logout()" title="Sign Out">
+        <span class="icon">🚪</span> Logout
+      </button>
+    </div>
   </div>
 
-  <!-- 2. Registered Assessments & Student Grading Section -->
+  @if (errorMessage) {
+    <div class="alert error">
+      <span class="alert-icon">⚠️</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+  @if (successMessage) {
+    <div class="alert success">
+      <span class="alert-icon">✅</span>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+
+  <!-- Course Selector Toolbar -->
+  <div class="course-selector-card card mb-4">
+    <div class="selector-row">
+      <div class="form-group flex-grow">
+        <label for="courseSelect"><strong>Active Course:</strong></label>
+        <select 
+          id="courseSelect" 
+          [(ngModel)]="selectedCourseId" 
+          (change)="onCourseChange()" 
+          class="form-control select-large"
+        >
+          @for (course of courses(); track course.id) {
+            <option [value]="course.id">
+              {{ course.code ? '[' + course.code + '] ' : '' }}{{ course.title }} (ID: #{{ course.id }})
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="course-stats">
+        <span class="stat-pill">
+          📚 Registered Assessments: <strong>{{ assessments().length }}</strong>
+        </span>
+        <span class="stat-pill">
+          👥 Enrolled Students: <strong>{{ courseEnrollments().length }}</strong>
+        </span>
+        <button 
+          type="button" 
+          class="btn-secondary btn-sm" 
+          (click)="ensureStandardCurriculum()" 
+          title="Verify or seed standard 100% components (20% + 30% + 50%)"
+        >
+          ⚙️ Verify Standard 100% Curriculum
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standard 100% Assessment Structure Banner -->
+  <div class="standard-curriculum-overview mb-4">
+    <div class="overview-title">
+      <span class="curriculum-badge">Official Curriculum Standard</span>
+      <h3>100% Academic Evaluation Components</h3>
+      <p class="curriculum-subtitle">Scores are graded out of 100 total points and converted to official 4.0 cumulative GPA scale upon administrator certification.</p>
+    </div>
+
+    <div class="components-grid">
+      @for (comp of standardAssessments; track comp.title) {
+        <div class="component-card">
+          <div class="comp-top">
+            <span class="comp-icon">📝</span>
+            <span class="comp-badge">{{ comp.badge }} Weight</span>
+          </div>
+          <h4>{{ comp.title }}</h4>
+          <p class="comp-desc">{{ comp.description }}</p>
+          <div class="comp-ceiling">
+            Max Ceiling: <strong>{{ comp.maxScore }} pts</strong>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- PRIMARY FEATURE: 100% Student Gradebook Matrix -->
+  <div class="card mb-4 gradebook-card">
+    <div class="card-title-row">
+      <div>
+        <h3>📖 Course Gradebook (Progressive Score Entry)</h3>
+        <p class="hint-text">Enter marks as each exam or assessment is completed. You can submit only Continuous Assessment (20%), Midterm (30%), Final (50%), or all together at any time.</p>
+      </div>
+      <button class="btn-secondary btn-sm" (click)="syncGradebook()" title="Reload scores">
+        🔄 Refresh Gradebook
+      </button>
+    </div>
+
+    @if (isLoadingGradebook()) {
+      <div class="empty-state">
+        <p>Loading course gradebook matrix...</p>
+      </div>
+    } @else if (gradebookRows().length === 0) {
+      <div class="empty-state">
+        <p>No enrolled students found for this course. Enroll students from the Admin center or student registration.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table gradebook-table">
+          <thead>
+            <tr>
+              <th style="min-width: 180px;">Enrolled Student</th>
+              <th style="min-width: 130px;">
+                Continuous Assessment
+                <small class="header-hint">(Max: 20 pts / 20%)</small>
+              </th>
+              <th style="min-width: 130px;">
+                Midterm Exam
+                <small class="header-hint">(Max: 30 pts / 30%)</small>
+              </th>
+              <th style="min-width: 130px;">
+                Final Exam
+                <small class="header-hint">(Max: 50 pts / 50%)</small>
+              </th>
+              <th style="min-width: 110px;">Total (100)</th>
+              <th style="min-width: 110px;">Grade (4.0)</th>
+              <th style="min-width: 130px;">Evaluation Status</th>
+              <th style="min-width: 130px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of gradebookRows(); track row.studentId) {
+              <tr>
+                <td>
+                  <div class="student-meta-cell">
+                    <strong>{{ row.studentName }}</strong>
+                    <span class="sub-reg">ID: #{{ row.studentId }} {{ row.registrationNumber ? '• ' + row.registrationNumber : '' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="input-cell-wrapper">
+                    <div class="input-with-limit" [class.has-error]="isContinuousInvalid(row.continuousScore)">
+                      <input 
+                        type="number" 
+                        [(ngModel)]="row.continuousScore" 
+                        min="0" 
+                        max="20" 
+                        step="0.5" 
+                        placeholder="0 - 20" 
+                        class="form-control score-input"
+                        [class.input-invalid]="isContinuousInvalid(row.continuousScore)"
+                      />
+                      <span class="limit-label">/ 20</span>
+                    </div>
+                    @if (isContinuousInvalid(row.continuousScore)) {
+                      <span class="error-hint">⚠️ Must be 0–20</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="input-cell-wrapper">
+                    <div class="input-with-limit" [class.has-error]="isMidtermInvalid(row.midtermScore)">
+                      <input 
+                        type="number" 
+                        [(ngModel)]="row.midtermScore" 
+                        min="0" 
+                        max="30" 
+                        step="0.5" 
+                        placeholder="0 - 30" 
+                        class="form-control score-input"
+                        [class.input-invalid]="isMidtermInvalid(row.midtermScore)"
+                      />
+                      <span class="limit-label">/ 30</span>
+                    </div>
+                    @if (isMidtermInvalid(row.midtermScore)) {
+                      <span class="error-hint">⚠️ Must be 0–30</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="input-cell-wrapper">
+                    <div class="input-with-limit" [class.has-error]="isFinalInvalid(row.finalScore)">
+                      <input 
+                        type="number" 
+                        [(ngModel)]="row.finalScore" 
+                        min="0" 
+                        max="50" 
+                        step="0.5" 
+                        placeholder="0 - 50" 
+                        class="form-control score-input"
+                        [class.input-invalid]="isFinalInvalid(row.finalScore)"
+                      />
+                      <span class="limit-label">/ 50</span>
+                    </div>
+                    @if (isFinalInvalid(row.finalScore)) {
+                      <span class="error-hint">⚠️ Must be 0–50</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="score-display-group">
+                    <span class="total-score-badge" [class.full-marks]="getTotalScore(row) >= 50" [class.fail-marks]="getTotalScore(row) > 0 && getTotalScore(row) < 50">
+                      {{ getTotalScore(row) }} / 100
+                    </span>
+                    <span class="letter-grade-pill" [attr.data-grade]="getLetterGrade(getTotalScore(row))">
+                      {{ getLetterGrade(getTotalScore(row)) }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <span class="grade-point-badge">
+                    ⭐ {{ getGradePoint(row) | number:'1.2-2' }}
+                  </span>
+                </td>
+                <td>
+                  @if (getCompletedComponentsCount(row) === 3) {
+                    <span class="status-pill status-complete">✅ 100% Evaluated</span>
+                  } @else if (getCompletedComponentsCount(row) > 0) {
+                    <span class="status-pill status-partial">⏳ {{ getCompletedComponentsCount(row) }}/3 Evaluated</span>
+                  } @else {
+                    <span class="status-pill status-none">⚪ Pending</span>
+                  }
+                </td>
+                <td style="text-align: right;">
+                  <button 
+                    type="button" 
+                    class="btn-success btn-sm" 
+                    [disabled]="row.isSaving || isRowInvalid(row)" 
+                    (click)="saveStudentMarks(row)"
+                    [title]="isRowInvalid(row) ? 'Invalid score entries - correct highlighted inputs' : 'Submit scores for this student'"
+                  >
+                    @if (row.isSaving) {
+                      <span>Saving...</span>
+                    } @else {
+                      <span>💾 Submit Scores</span>
+                    }
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- SECONDARY FEATURE: Direct Predefined Score Entry (No Typing Titles) -->
+  <div class="card mb-4 quick-assess-card">
+    <div class="card-title-row">
+      <h3>⚡ Direct Predefined Component Score Entry</h3>
+      <span class="badge-hint">Quick Single Submission</span>
+    </div>
+    <p class="hint-text">Select an existing student and choose from the predefined standard components. No need to type titles or weights.</p>
+
+    <form (submit)="$event.preventDefault(); onQuickAssessStudent()" class="quick-form-grid">
+      <div class="form-group span-2">
+        <label>Select Enrolled Student: <span class="required">*</span></label>
+        <select 
+          [ngModel]="quickAssessment.studentId" 
+          (ngModelChange)="onSelectStudent($event)" 
+          name="quickStudentId" 
+          class="form-control" 
+          required
+        >
+          <option [value]="0">-- Choose Registered Student --</option>
+          @for (student of students(); track student.id) {
+            <option [value]="student.id">
+              {{ student.name }} (ID: #{{ student.id }} | Reg: {{ student.registrationNumber || 'N/A' }})
+              {{ isStudentEnrolled(student.id) ? '⭐ [Enrolled]' : ' [New Enrollment]' }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group span-2">
+        <label>Predefined Assessment Component: <span class="required">*</span></label>
+        <select 
+          [(ngModel)]="quickAssessment.assessmentIndex" 
+          name="quickAsmIndex" 
+          class="form-control font-semibold" 
+          required
+        >
+          @for (comp of standardAssessments; track comp.title; let idx = $index) {
+            <option [value]="idx">
+              {{ comp.title }} (Max: {{ comp.maxScore }} pts &bull; Weight: {{ comp.badge }})
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          Score Obtained (0 - {{ standardAssessments[quickAssessment.assessmentIndex].maxScore }}): <span class="required">*</span>
+        </label>
+        <input 
+          type="number" 
+          step="0.01" 
+          [(ngModel)]="quickAssessment.scoreObtained" 
+          name="quickScore" 
+          placeholder="e.g. {{ standardAssessments[quickAssessment.assessmentIndex].maxScore * 0.85 }}" 
+          min="0" 
+          [max]="standardAssessments[quickAssessment.assessmentIndex].maxScore" 
+          required 
+          class="form-control" 
+          [class.input-invalid]="isQuickScoreInvalid()"
+        />
+        @if (isQuickScoreInvalid()) {
+          <span class="error-hint mt-1">
+            ⚠️ Invalid score: Must be between 0 and {{ standardAssessments[quickAssessment.assessmentIndex].maxScore }}.
+          </span>
+        }
+      </div>
+
+      <div class="form-group btn-col">
+        <button type="submit" class="btn-primary btn-block" [disabled]="isQuickScoreInvalid()">
+          🚀 Submit Score for {{ standardAssessments[quickAssessment.assessmentIndex].title }}
+        </button>
+      </div>
+    </form>
+
+    @if (selectedStudent()) {
+      <div class="selected-student-banner mt-3">
+        <div class="student-avatar">👤</div>
+        <div class="student-meta">
+          <strong>{{ selectedStudent()?.name }}</strong> &bull; Registration: <code>{{ selectedStudent()?.registrationNumber || 'N/A' }}</code> &bull; Student ID: <strong>#{{ selectedStudent()?.id }}</strong>
+          <span class="status-indicator" [class.enrolled]="isStudentEnrolled(selectedStudent()!.id)">
+            {{ isStudentEnrolled(selectedStudent()!.id) ? '✅ Enrolled in this Course' : 'ℹ️ Will be automatically linked & enrolled as Approved' }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Registered Course Assessments & Detailed Breakdown -->
   <div class="card">
-    <h3>Course Assessments & Grade Submissions</h3>
+    <div class="card-title-row">
+      <h3>Course Assessment Definitions & Records</h3>
+      <span class="badge-count">{{ assessments().length }} Registered</span>
+    </div>
     
     <div class="assessment-list">
       @for (asm of assessments(); track asm.id) {
         <div class="assessment-item-card" [class.active]="selectedAssessmentId === asm.id">
           <div class="assessment-header">
-            <div>
-              <strong>{{ asm.title }}</strong> 
-              <span class="badge">Max: {{ asm.maxScore }}</span>
-              <span class="badge">Weight: {{ asm.weight }}</span>
+            <div class="asm-info">
+              <span class="asm-icon">📝</span>
+              <div>
+                <strong>{{ asm.title }}</strong> 
+                <div class="badge-group">
+                  <span class="badge badge-score">Max Ceiling: {{ asm.maxScore }} pts</span>
+                  <span class="badge badge-weight">Weight: {{ (asm.weight * 100) | number:'1.0-0' }}%</span>
+                </div>
+              </div>
             </div>
             <div class="actions">
-              <button class="btn-sm" [class.btn-primary]="selectedAssessmentId !== asm.id" [class.btn-secondary]="selectedAssessmentId === asm.id" (click)="toggleAssessment(asm.id)">
-                {{ selectedAssessmentId === asm.id ? 'Close Grading' : '📝 Grade Students' }}
+              <button 
+                class="btn-sm" 
+                [class.btn-primary]="selectedAssessmentId !== asm.id" 
+                [class.btn-dark]="selectedAssessmentId === asm.id" 
+                (click)="toggleAssessment(asm.id)"
+              >
+                {{ selectedAssessmentId === asm.id ? '✖ Close Records' : '✍️ View / Edit Records' }}
               </button>
-              <button class="btn-sm btn-danger" (click)="deleteAssessment(asm.id)">Delete</button>
+              <button class="btn-sm btn-danger" (click)="deleteAssessment(asm.id)" title="Delete assessment">
+                🗑️ Delete
+              </button>
             </div>
           </div>
 
-          <!-- Expanded Grading Section for this specific Assessment -->
+          <!-- Expanded Records Table for this specific Assessment -->
           @if (selectedAssessmentId === asm.id) {
             <div class="grading-section mt-3">
-              <h4>Submit Grade for {{ asm.title }}</h4>
-              
-              <form (submit)="$event.preventDefault(); onGradeStudent()" class="grade-form-grid">
-                <div class="form-group">
-                  <label>Record Title:</label>
-                  <input type="text" [(ngModel)]="newGrade.title" name="gradeTitle" placeholder="e.g., Attempt 1" required class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>Student ID:</label>
-                  <input type="number" [(ngModel)]="newGrade.studentId" name="studentId" placeholder="Student ID" required class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>Score Obtained:</label>
-                  <input type="number" step="0.01" [(ngModel)]="newGrade.scoreObtained" name="scoreObtained" placeholder="Score" required class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>Weight:</label>
-                  <input type="number" step="0.01" [(ngModel)]="newGrade.weight" name="gradeWeight" placeholder="Weight" required class="form-control" />
-                </div>
-                <div style="grid-column: 1 / -1;">
-                  <button type="submit" class="btn-success">Submit Grade Record</button>
-                </div>
-              </form>
+              <div class="sub-header">
+                <h4>Existing Grade Records for: <em>{{ asm.title }}</em></h4>
+                <small class="text-muted">Max Score Ceiling: {{ asm.maxScore }} pts &bull; Weight: {{ (asm.weight * 100) | number:'1.0-0' }}%</small>
+              </div>
 
               <!-- Results Table -->
-              <table class="data-table mt-3">
-                <thead>
-                  <tr>
-                    <th>Student Name</th>
-                    <th>Record Title</th>
-                    <th>Score Obtained</th>
-                    <th>Weight</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (res of results(); track res.id) {
+              <div class="table-responsive">
+                <table class="data-table mt-2">
+                  <thead>
                     <tr>
-                      <td>{{ res.studentName }}</td>
-                      <td>{{ res.title }}</td>
-                      <td>
-                        <input type="number" [(ngModel)]="res.scoreObtained" class="form-control-sm" />
-                      </td>
-                      <td>{{ res.weight }}</td>
-                      <td>
-                        <button class="btn-sm btn-success" (click)="updateScore(res)">Save</button>
-                        <button class="btn-sm btn-danger" (click)="deleteResult(res.id)">Delete</button>
-                      </td>
+                      <th>Student Name</th>
+                      <th>Student ID</th>
+                      <th>Record Title</th>
+                      <th>Score Obtained</th>
+                      <th>Max Score</th>
+                      <th>Weight</th>
+                      <th style="text-align: right;">Actions</th>
                     </tr>
-                  } @empty {
-                    <tr><td colspan="5" class="empty-state">No student grades submitted for this assessment yet.</td></tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    @for (res of results(); track res.id) {
+                      <tr>
+                        <td><strong>{{ res.studentName }}</strong></td>
+                        <td><code>#{{ res.studentId }}</code></td>
+                        <td>{{ res.title }}</td>
+                        <td>
+                          <input type="number" step="0.01" [(ngModel)]="res.scoreObtained" [max]="asm.maxScore" class="form-control-sm" />
+                        </td>
+                        <td>{{ asm.maxScore }} pts</td>
+                        <td>{{ (res.weight * 100) | number:'1.0-0' }}%</td>
+                        <td style="text-align: right;">
+                          <button class="btn-sm btn-success" (click)="updateScore(res)" title="Save updated score">Save</button>
+                          <button class="btn-sm btn-danger" (click)="deleteResult(res.id)" title="Delete record">Delete</button>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="7" class="empty-state">No student grades submitted for this assessment yet.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
           }
         </div>
       } @empty {
-        <p class="empty-state">No assessments registered for this course yet. Use the form above to create one.</p>
+        <div class="empty-state-card">
+          <p class="empty-state">No assessments registered for this course yet.</p>
+          <button type="button" class="btn-primary btn-sm" (click)="ensureStandardCurriculum()">
+            ➕ Initialize Standard 100% Curriculum (20% + 30% + 50%)
+          </button>
+        </div>
       }
     </div>
   </div>

@@ -1,5 +1,6 @@
-import { Component, input, effect } from "@angular/core";
+import { Component, input, effect, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { AuthService } from "../../services/auth.service";
 
 @Component({
   selector: "app-course-detail",
@@ -11,6 +12,7 @@ import { RouterLink } from "@angular/router";
 export class CourseDetailComponent {
   // Automatically receives the :id from the URL /courses/:id
   id = input.required<string>();
+  public authService = inject(AuthService);
 
   constructor() {
     effect(() => {
