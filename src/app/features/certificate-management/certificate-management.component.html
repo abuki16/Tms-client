@@ -17,17 +17,6 @@
     </div>
   </div>
 
-  @if (errorMessage) {
-    <div class="alert error">
-      <span class="alert-icon">⚠️</span> {{ errorMessage }}
-    </div>
-  }
-  @if (successMessage) {
-    <div class="alert success">
-      <span class="alert-icon">✅</span> {{ successMessage }}
-    </div>
-  }
-
   <div class="grid-layout">
     <!-- Issue Certificate Card -->
     <div class="card issue-card">
@@ -161,12 +150,13 @@
                       max="4.0" 
                       step="0.05" 
                       class="form-control font-mono" 
+                      [class.input-invalid]="isAdminGradeInvalid()"
                       placeholder="e.g. 3.75"
                     />
                     <button 
                       type="button" 
                       class="btn-secondary-sm" 
-                      [disabled]="isSavingGrade() || editingGradeValue === null" 
+                      [disabled]="isSavingGrade() || editingGradeValue === null || isAdminGradeInvalid()" 
                       (click)="saveAdminGrade()"
                       title="Save verified grade directly to enrollment record"
                     >
@@ -177,7 +167,10 @@
                       }
                     </button>
                   </div>
-                  @if (gradeSaveSuccess()) {
+                  @if (isAdminGradeInvalid()) {
+                    <span class="text-error-hint">⚠️ Invalid grade: Must be between 0.00 and 4.00.</span>
+                  }
+                  @if (gradeSaveSuccess() && !isAdminGradeInvalid()) {
                     <span class="text-success-hint">✅ Verified grade saved and registered for this certificate.</span>
                   }
                 </div>

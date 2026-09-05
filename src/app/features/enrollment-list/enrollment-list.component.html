@@ -18,16 +18,6 @@
   <div class="loading-bar">Loading enrollments...</div>
 }
 
-@if (store.error()) {
-  <div class="error-message">{{ store.error() }}</div>
-}
-
-@if (gradeMessage(); as msg) {
-  <div class="feedback-alert" [class.alert-error]="msg.isError" [class.alert-success]="!msg.isError">
-    {{ msg.isError ? '⚠️' : '✅' }} {{ msg.text }}
-  </div>
-}
-
 <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
 
   <!-- Student Name Column -->

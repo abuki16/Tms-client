@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 export interface StudentOption {
   id: number;
@@ -43,13 +44,18 @@ export interface CertificateResponseDto {
 @Component({
   selector: 'tms-certificate-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterLink
+  ],
   templateUrl: './certificate-management.component.html',
   styleUrl: './certificate-management.component.scss'
 })
 export class CertificateManagementComponent implements OnInit {
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
   public authService = inject(AuthService);
   private baseUrl = '/api/Certificates';
 
@@ -108,6 +114,19 @@ export class CertificateManagementComponent implements OnInit {
     return this.studentCertificates().some(c => Number(c.courseId) === cId && Number(c.studentId) === sId);
   });
 
+  // Validation for admin grade edit range [0.00, 4.00]
+  isAdminGradeInvalid = computed(() => {
+    if (
+      this.editingGradeValue === null || 
+      this.editingGradeValue === undefined || 
+      (this.editingGradeValue as any) === ''
+    ) {
+      return false;
+    }
+    const val = Number(this.editingGradeValue);
+    return isNaN(val) || val < 0.0 || val > 4.0;
+  });
+
   getLetterGrade(gradePoint: number | null | undefined): string {
     if (gradePoint === null || gradePoint === undefined) return '—';
     const gp = Number(gradePoint);
@@ -124,16 +143,15 @@ export class CertificateManagementComponent implements OnInit {
   saveAdminGrade() {
     const enroll = this.selectedEnrollment();
     if (!enroll) {
-      this.errorMessage = 'No active enrollment record found for this course.';
+      this.toast.error('No active enrollment record found for this course.');
       return;
     }
-    if (this.editingGradeValue === null || isNaN(Number(this.editingGradeValue)) || Number(this.editingGradeValue) < 0 || Number(this.editingGradeValue) > 4.0) {
-      this.errorMessage = 'Invalid grade: Grade must be between 0.00 and 4.00.';
+    if (this.isAdminGradeInvalid() || this.editingGradeValue === null) {
+      this.toast.error('Invalid grade: Grade must be between 0.00 and 4.00.');
       return;
     }
 
     this.isSavingGrade.set(true);
-    this.errorMessage = '';
     const newGrade = Math.round(Number(this.editingGradeValue) * 100) / 100;
 
     this.http.put(`/api/grades/enrollments/${enroll.id}`, { grade: newGrade }).subscribe({
@@ -141,11 +159,13 @@ export class CertificateManagementComponent implements OnInit {
         this.isSavingGrade.set(false);
         enroll.grade = newGrade;
         this.gradeSaveSuccess.set(true);
-        this.successMessage = `Grade successfully verified and updated to ${newGrade.toFixed(2)} (${this.getLetterGrade(newGrade)})!`;
+        this.toast.success(
+          `Grade successfully verified and updated to ${newGrade.toFixed(2)} (${this.getLetterGrade(newGrade)})!`
+        );
       },
       error: (err) => {
         this.isSavingGrade.set(false);
-        this.errorMessage = err.error?.detail || err.error?.message || 'Failed to update grade.';
+        this.toast.error(err.error?.detail || err.error?.message || 'Failed to update grade.');
       }
     });
   }
@@ -163,9 +183,6 @@ export class CertificateManagementComponent implements OnInit {
 
   // Lookup Form Model
   searchStudentId: number | null = null;
-
-  successMessage = '';
-  errorMessage = '';
 
   ngOnInit() {
     this.loadStudents();
@@ -266,8 +283,6 @@ export class CertificateManagementComponent implements OnInit {
     this.selectedCourseId.set(cId);
     const found = this.courses().find(c => c.id === cId);
     this.selectedCourse.set(found || null);
-    this.errorMessage = '';
-    this.successMessage = '';
     this.gradeSaveSuccess.set(false);
 
     const enroll = this.selectedEnrollment();
@@ -280,63 +295,72 @@ export class CertificateManagementComponent implements OnInit {
 
   onIssueCertificate() {
     if (!this.newCert.studentId || this.newCert.studentId <= 0) {
-      this.errorMessage = 'Please select a valid student.';
+      this.toast.warning('Please select a valid student.');
       return;
     }
     if (!this.newCert.courseId || this.newCert.courseId <= 0) {
-      this.errorMessage = 'Please select a course for the certificate.';
+      this.toast.warning('Please select a course for the certificate.');
       return;
     }
     if (!this.newCert.serialNumber?.trim()) {
-      this.errorMessage = 'Serial number is required.';
+      this.toast.warning('Serial number is required.');
       return;
     }
 
     if (this.isAlreadyIssued()) {
-      this.errorMessage = 'A certificate has already been issued to this student for this course.';
+      this.toast.error('A certificate has already been issued to this student for this course.');
       return;
     }
 
     // Strict validation: Verify student has finished the course with a submitted grade
-    const enroll = this.studentEnrollments().find(e => Number(e.courseId) === Number(this.newCert.courseId));
+    const enroll = this.studentEnrollments().find(e => 
+      Number(e.courseId) === Number(this.newCert.courseId)
+    );
     if (!enroll) {
-      this.errorMessage = 'Certificate cannot be generated: The selected student is not enrolled in this course.';
+      this.toast.error('Certificate cannot be generated: The selected student is not enrolled in this course.');
       return;
     }
 
-    const currentGrade = this.editingGradeValue !== null ? Number(this.editingGradeValue) : (enroll.grade !== null && enroll.grade !== undefined ? Number(enroll.grade) : null);
+    const currentGrade = this.editingGradeValue !== null 
+      ? Number(this.editingGradeValue) 
+      : (enroll.grade !== null && enroll.grade !== undefined ? Number(enroll.grade) : null);
+
     if (currentGrade === null || isNaN(currentGrade)) {
-      this.errorMessage = 'Certificate cannot be generated: The student has not completed this course with a submitted grade. The instructor must submit a grade before an official certificate can be issued.';
+      this.toast.error(
+        'Certificate cannot be generated: The student has not completed this course with a submitted grade.'
+      );
       return;
     }
     if (currentGrade < 2.00) {
-      this.errorMessage = 'Certificate cannot be generated: The student has not completed this course with a passing submitted grade (minimum 2.00 / C).';
+      this.toast.error(
+        'Certificate cannot be generated: The student has not completed this course with a passing grade (minimum 2.00 / C).'
+      );
+      return;
+    }
+    if (currentGrade > 4.00 || currentGrade < 0.00) {
+      this.toast.error('Invalid grade: Grade must be between 0.00 and 4.00.');
       return;
     }
 
     this.newCert.grade = currentGrade;
     this.isIssuing.set(true);
-    this.errorMessage = '';
-    this.successMessage = '';
 
     this.http.post<CertificateResponseDto>(this.baseUrl, this.newCert).subscribe({
       next: (res) => {
         this.isIssuing.set(false);
-        this.successMessage = `Certificate successfully issued for ${res.studentName || this.selectedStudent()?.name || 'Student'}! Serial: ${res.serialNumber}`;
-        this.errorMessage = '';
+        this.toast.success(
+          `Certificate successfully issued for ${res.studentName || this.selectedStudent()?.name || 'Student'}! Serial: ${res.serialNumber}`
+        );
         this.previewCertificate.set(res);
         this.showPreviewModal.set(true);
-
-        // Refresh lookup list
         this.onSearchStudentCertificates();
-
-        // Regenerate new serial for next issuance
         this.generateSerialNumber(this.selectedStudent(), this.newCert.studentId);
       },
       error: (err) => {
         this.isIssuing.set(false);
-        this.errorMessage = err.error?.detail || err.error?.message || (typeof err.error === 'string' ? err.error : 'Failed to issue certificate. Verify that the student and course IDs exist, and ensure unique serial number.');
-        this.successMessage = '';
+        this.toast.error(
+          err.error?.detail || err.error?.message || (typeof err.error === 'string' ? err.error : 'Failed to issue certificate.')
+        );
       }
     });
   }
@@ -347,7 +371,6 @@ export class CertificateManagementComponent implements OnInit {
     this.http.get<CertificateResponseDto[]>(`${this.baseUrl}/student/${this.searchStudentId}`).subscribe({
       next: (data) => {
         this.studentCertificates.set(data || []);
-        this.errorMessage = '';
       },
       error: () => {
         this.studentCertificates.set([]);
@@ -360,13 +383,13 @@ export class CertificateManagementComponent implements OnInit {
 
     this.http.delete(`${this.baseUrl}/${id}`).subscribe({
       next: () => {
-        this.successMessage = `Certificate #${id} revoked successfully.`;
+        this.toast.success(`Certificate #${id} revoked successfully.`);
         if (this.searchStudentId) {
           this.onSearchStudentCertificates();
         }
       },
       error: () => {
-        this.errorMessage = 'Failed to revoke the certificate.';
+        this.toast.error('Failed to revoke the certificate.');
       }
     });
   }

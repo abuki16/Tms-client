@@ -242,6 +242,13 @@
             color: #15803d;
             font-weight: 600;
           }
+
+          &.locked {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+            border: 1px solid #fca5a5;
+          }
         }
       }
     }
@@ -760,8 +767,22 @@
           background: #f1f5f9;
           color: #64748b;
         }
+
+        &.status-locked {
+          background: #fee2e2;
+          color: #991b1b;
+          border: 1px solid #fca5a5;
+          font-weight: 700;
+        }
       }
     }
+  }
+
+  .input-locked {
+    background-color: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
+    border-color: #e2e8f0 !important;
   }
 
   .input-invalid {

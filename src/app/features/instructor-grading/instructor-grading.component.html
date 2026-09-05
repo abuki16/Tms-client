@@ -1,3 +1,4 @@
+<!-- Instructor Grading & Course Assessment Portal -->
 <div class="grading-container">
   
   <!-- Header Navigation -->
@@ -16,19 +17,6 @@
       </button>
     </div>
   </div>
-
-  @if (errorMessage) {
-    <div class="alert error">
-      <span class="alert-icon">⚠️</span>
-      <span>{{ errorMessage }}</span>
-    </div>
-  }
-  @if (successMessage) {
-    <div class="alert success">
-      <span class="alert-icon">✅</span>
-      <span>{{ successMessage }}</span>
-    </div>
-  }
 
   <!-- Course Selector Toolbar -->
   <div class="course-selector-card card mb-4">
@@ -148,7 +136,10 @@
                 </td>
                 <td>
                   <div class="input-cell-wrapper">
-                    <div class="input-with-limit" [class.has-error]="isContinuousInvalid(row.continuousScore)">
+                    <div 
+                      class="input-with-limit" 
+                      [class.has-error]="isContinuousInvalid(row.continuousScore)"
+                    >
                       <input 
                         type="number" 
                         [(ngModel)]="row.continuousScore" 
@@ -158,6 +149,9 @@
                         placeholder="0 - 20" 
                         class="form-control score-input"
                         [class.input-invalid]="isContinuousInvalid(row.continuousScore)"
+                        [class.input-locked]="!isRowApproved(row)"
+                        [disabled]="!isRowApproved(row) || !!row.isSaving"
+                        [title]="!isRowApproved(row) ? 'Grading locked: Student enrollment requires Administrator approval' : ''"
                       />
                       <span class="limit-label">/ 20</span>
                     </div>
@@ -168,7 +162,10 @@
                 </td>
                 <td>
                   <div class="input-cell-wrapper">
-                    <div class="input-with-limit" [class.has-error]="isMidtermInvalid(row.midtermScore)">
+                    <div 
+                      class="input-with-limit" 
+                      [class.has-error]="isMidtermInvalid(row.midtermScore)"
+                    >
                       <input 
                         type="number" 
                         [(ngModel)]="row.midtermScore" 
@@ -178,6 +175,9 @@
                         placeholder="0 - 30" 
                         class="form-control score-input"
                         [class.input-invalid]="isMidtermInvalid(row.midtermScore)"
+                        [class.input-locked]="!isRowApproved(row)"
+                        [disabled]="!isRowApproved(row) || !!row.isSaving"
+                        [title]="!isRowApproved(row) ? 'Grading locked: Student enrollment requires Administrator approval' : ''"
                       />
                       <span class="limit-label">/ 30</span>
                     </div>
@@ -188,7 +188,10 @@
                 </td>
                 <td>
                   <div class="input-cell-wrapper">
-                    <div class="input-with-limit" [class.has-error]="isFinalInvalid(row.finalScore)">
+                    <div 
+                      class="input-with-limit" 
+                      [class.has-error]="isFinalInvalid(row.finalScore)"
+                    >
                       <input 
                         type="number" 
                         [(ngModel)]="row.finalScore" 
@@ -198,6 +201,9 @@
                         placeholder="0 - 50" 
                         class="form-control score-input"
                         [class.input-invalid]="isFinalInvalid(row.finalScore)"
+                        [class.input-locked]="!isRowApproved(row)"
+                        [disabled]="!isRowApproved(row) || !!row.isSaving"
+                        [title]="!isRowApproved(row) ? 'Grading locked: Student enrollment requires Administrator approval' : ''"
                       />
                       <span class="limit-label">/ 50</span>
                     </div>
@@ -208,10 +214,17 @@
                 </td>
                 <td>
                   <div class="score-display-group">
-                    <span class="total-score-badge" [class.full-marks]="getTotalScore(row) >= 50" [class.fail-marks]="getTotalScore(row) > 0 && getTotalScore(row) < 50">
+                    <span 
+                      class="total-score-badge" 
+                      [class.full-marks]="getTotalScore(row) >= 50" 
+                      [class.fail-marks]="getTotalScore(row) > 0 && getTotalScore(row) < 50"
+                    >
                       {{ getTotalScore(row) }} / 100
                     </span>
-                    <span class="letter-grade-pill" [attr.data-grade]="getLetterGrade(getTotalScore(row))">
+                    <span 
+                      class="letter-grade-pill" 
+                      [attr.data-grade]="getLetterGrade(getTotalScore(row))"
+                    >
                       {{ getLetterGrade(getTotalScore(row)) }}
                     </span>
                   </div>
@@ -222,7 +235,14 @@
                   </span>
                 </td>
                 <td>
-                  @if (getCompletedComponentsCount(row) === 3) {
+                  @if (!isRowApproved(row)) {
+                    <span 
+                      class="status-pill status-locked" 
+                      title="Grading locked: Student enrollment has not been approved by an administrator"
+                    >
+                      🔒 Pending Admin Approval
+                    </span>
+                  } @else if (getCompletedComponentsCount(row) === 3) {
                     <span class="status-pill status-complete">✅ 100% Evaluated</span>
                   } @else if (getCompletedComponentsCount(row) > 0) {
                     <span class="status-pill status-partial">⏳ {{ getCompletedComponentsCount(row) }}/3 Evaluated</span>
@@ -234,11 +254,13 @@
                   <button 
                     type="button" 
                     class="btn-success btn-sm" 
-                    [disabled]="row.isSaving || isRowInvalid(row)" 
+                    [disabled]="!isRowApproved(row) || !!row.isSaving || isRowInvalid(row)" 
                     (click)="saveStudentMarks(row)"
-                    [title]="isRowInvalid(row) ? 'Invalid score entries - correct highlighted inputs' : 'Submit scores for this student'"
+                    [title]="!isRowApproved(row) ? 'Grading locked: Enrollment pending administrator approval' : (isRowInvalid(row) ? 'Invalid score entries - correct highlighted inputs' : 'Submit scores for this student')"
                   >
-                    @if (row.isSaving) {
+                    @if (!isRowApproved(row)) {
+                      <span>🔒 Locked</span>
+                    } @else if (row.isSaving) {
                       <span>Saving...</span>
                     } @else {
                       <span>💾 Submit Scores</span>
@@ -321,8 +343,16 @@
       </div>
 
       <div class="form-group btn-col">
-        <button type="submit" class="btn-primary btn-block" [disabled]="isQuickScoreInvalid()">
-          🚀 Submit Score for {{ standardAssessments[quickAssessment.assessmentIndex].title }}
+        <button 
+          type="submit" 
+          class="btn-primary btn-block" 
+          [disabled]="!isQuickStudentApproved() || isQuickScoreInvalid()"
+        >
+          @if (!isQuickStudentApproved()) {
+            <span>🔒 Grading Locked (Awaiting Administrator Approval)</span>
+          } @else {
+            <span>🚀 Submit Score for {{ standardAssessments[quickAssessment.assessmentIndex].title }}</span>
+          }
         </button>
       </div>
     </form>
@@ -332,9 +362,15 @@
         <div class="student-avatar">👤</div>
         <div class="student-meta">
           <strong>{{ selectedStudent()?.name }}</strong> &bull; Registration: <code>{{ selectedStudent()?.registrationNumber || 'N/A' }}</code> &bull; Student ID: <strong>#{{ selectedStudent()?.id }}</strong>
-          <span class="status-indicator" [class.enrolled]="isStudentEnrolled(selectedStudent()!.id)">
-            {{ isStudentEnrolled(selectedStudent()!.id) ? '✅ Enrolled in this Course' : 'ℹ️ Will be automatically linked & enrolled as Approved' }}
-          </span>
+          @if (isQuickStudentApproved()) {
+            <span class="status-indicator enrolled">
+              ✅ Approved Enrollment
+            </span>
+          } @else {
+            <span class="status-indicator locked">
+              🔒 Pending Administrator Approval (Grading Locked)
+            </span>
+          }
         </div>
       </div>
     }

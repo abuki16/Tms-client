@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RegistrarService } from '../../services/registrar.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'tms-registrar-dashboard',
@@ -13,6 +14,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class RegistrarDashboardComponent implements OnInit {
   private registrarService = inject(RegistrarService);
+  private toast = inject(ToastService);
   public authService = inject(AuthService);
 
   highGpaCount = signal<number>(0);
@@ -21,7 +23,6 @@ export class RegistrarDashboardComponent implements OnInit {
   unenrolledStudents = signal<string[]>([]);
   
   isLoading = signal<boolean>(true);
-  errorMessage = signal<string | null>(null);
 
   ngOnInit() {
     this.loadRegistrarData();
@@ -29,12 +30,11 @@ export class RegistrarDashboardComponent implements OnInit {
 
   loadRegistrarData() {
     this.isLoading.set(true);
-    this.errorMessage.set(null);
 
     // 1. High GPA Active Students Count
     this.registrarService.getActiveHighGpaCount().subscribe({
       next: (res) => this.highGpaCount.set(res.count),
-      error: () => this.errorMessage.set('Failed to load registrar statistics.')
+      error: () => this.toast.error('Failed to load registrar statistics.')
     });
 
     // 2. Courses Ranked by Enrollments
@@ -62,6 +62,7 @@ export class RegistrarDashboardComponent implements OnInit {
   }
 
   refreshData() {
+    this.toast.info('Refreshing analytics...');
     this.loadRegistrarData();
   }
 }

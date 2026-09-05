@@ -58,3 +58,92 @@
     line-height: 1;
   }
 }
+
+/* ==========================================================================
+   Universal TMS Toast & Snackbar Notification Styling
+   ========================================================================== */
+
+.mat-mdc-snack-bar-container.tms-toast {
+  --mdc-snackbar-container-shape: 10px;
+  
+  .mdc-snackbar__surface {
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25),
+                0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  }
+
+  .mdc-snackbar__label {
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .mat-mdc-snack-bar-action {
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: unset;
+    padding: 0 0.5rem;
+  }
+
+  &.toast-success {
+    --mdc-snackbar-container-color: #065f46;
+    --mat-snack-bar-button-color: #a7f3d0;
+    .mdc-snackbar__surface {
+      background-color: #065f46 !important;
+      border: 1px solid #059669;
+    }
+    .mdc-snackbar__label {
+      color: #ffffff !important;
+    }
+    .mat-mdc-snack-bar-action {
+      color: #a7f3d0 !important;
+    }
+  }
+
+  &.toast-error {
+    --mdc-snackbar-container-color: #991b1b;
+    --mat-snack-bar-button-color: #fecaca;
+    .mdc-snackbar__surface {
+      background-color: #991b1b !important;
+      border: 1px solid #dc2626;
+    }
+    .mdc-snackbar__label {
+      color: #ffffff !important;
+    }
+    .mat-mdc-snack-bar-action {
+      color: #fecaca !important;
+    }
+  }
+
+  &.toast-warning {
+    --mdc-snackbar-container-color: #92400e;
+    --mat-snack-bar-button-color: #fde68a;
+    .mdc-snackbar__surface {
+      background-color: #92400e !important;
+      border: 1px solid #d97706;
+    }
+    .mdc-snackbar__label {
+      color: #ffffff !important;
+    }
+    .mat-mdc-snack-bar-action {
+      color: #fde68a !important;
+    }
+  }
+
+  &.toast-info {
+    --mdc-snackbar-container-color: #1e3a8a;
+    --mat-snack-bar-button-color: #bfdbfe;
+    .mdc-snackbar__surface {
+      background-color: #1e3a8a !important;
+      border: 1px solid #2563eb;
+    }
+    .mdc-snackbar__label {
+      color: #ffffff !important;
+    }
+    .mat-mdc-snack-bar-action {
+      color: #bfdbfe !important;
+    }
+  }
+}

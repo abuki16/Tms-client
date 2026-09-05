@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CourseService } from '../../services/course.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { 
   Course, 
   CourseDetail, 
@@ -20,12 +21,17 @@ export interface InstructorOption {
 @Component({
   selector: 'tms-course-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterLink
+  ],
   templateUrl: './course-management.component.html',
   styleUrl: './course-management.component.scss'
 })
 export class CourseManagementComponent implements OnInit {
   private courseService = inject(CourseService);
+  private toast = inject(ToastService);
   public authService = inject(AuthService);
   private http = inject(HttpClient);
 
@@ -38,8 +44,6 @@ export class CourseManagementComponent implements OnInit {
   searchQuery = signal<string>('');
   
   isLoading = signal<boolean>(false);
-  errorMessage = signal<string | null>(null);
-  successMessage = signal<string | null>(null);
 
   // Modal States
   showCreateModal = signal<boolean>(false);
@@ -80,22 +84,24 @@ export class CourseManagementComponent implements OnInit {
   }
 
   assignInstructor(courseId: number, instructorId: string) {
-    this.http.post(`/api/courses/${courseId}/assign-instructor`, { instructorId: instructorId || null }).subscribe({
+    this.http.post(`/api/courses/${courseId}/assign-instructor`, { 
+      instructorId: instructorId || null 
+    }).subscribe({
       next: () => {
-        this.triggerSuccess('Instructor assignment updated successfully.');
+        this.toast.success('Instructor assignment updated successfully.');
         this.loadCourses();
       },
-      error: () => this.errorMessage.set('Failed to assign instructor to course.')
+      error: () => {
+        this.toast.error('Failed to assign instructor to course.');
+      }
     });
   }
 
   loadCourses() {
     this.isLoading.set(true);
-    this.errorMessage.set(null);
 
     this.courseService.getAll(this.currentPage(), this.pageSize()).subscribe({
       next: (response: PagedResponse<Course>) => {
-        // Backend handles search, but apply fallback or assign items directly
         const items = response.items || [];
         const query = this.searchQuery().toLowerCase();
         
@@ -108,7 +114,7 @@ export class CourseManagementComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Failed to retrieve course catalog from the server.');
+        this.toast.error('Failed to retrieve course catalog from the server.');
         this.isLoading.set(false);
       }
     });
@@ -130,7 +136,12 @@ export class CourseManagementComponent implements OnInit {
 
   // --- Create Modal & Action ---
   openCreateModal() {
-    this.newCourse = { code: '', title: '', maxCapacity: 30, instructorId: '' };
+    this.newCourse = { 
+      code: '', 
+      title: '', 
+      maxCapacity: 30, 
+      instructorId: '' 
+    };
     this.showCreateModal.set(true);
   }
 
@@ -145,11 +156,13 @@ export class CourseManagementComponent implements OnInit {
           this.assignInstructor(created.id, this.newCourse.instructorId);
         }
         this.showCreateModal.set(false);
-        this.triggerSuccess('Course successfully created.');
+        this.toast.success(`Course "${created?.title || this.newCourse.title}" successfully created!`);
         this.loadCourses();
       },
       error: (err) => {
-        this.errorMessage.set(err.error?.detail || 'Failed to create course. Ensure the course code follows format (e.g., CSE-101, AI-101) and is unique.');
+        this.toast.error(
+          err.error?.detail || 'Failed to create course. Ensure the course code follows format (e.g., CSE-101) and is unique.'
+        );
       }
     });
   }
@@ -179,11 +192,11 @@ export class CourseManagementComponent implements OnInit {
           this.assignInstructor(this.selectedCourseId!, this.editCourseData.instructorId);
         }
         this.showEditModal.set(false);
-        this.triggerSuccess('Course updated successfully.');
+        this.toast.success('Course updated successfully.');
         this.loadCourses();
       },
       error: (err) => {
-        this.errorMessage.set(err.error?.detail || 'Failed to update course.');
+        this.toast.error(err.error?.detail || 'Failed to update course.');
       }
     });
   }
@@ -195,7 +208,9 @@ export class CourseManagementComponent implements OnInit {
         this.selectedCourseDetails.set(details);
         this.showDetailsModal.set(true);
       },
-      error: () => this.errorMessage.set('Could not fetch course details and HATEOAS links.')
+      error: () => {
+        this.toast.error('Could not fetch course details and HATEOAS links.');
+      }
     });
   }
 
@@ -205,15 +220,12 @@ export class CourseManagementComponent implements OnInit {
 
     this.courseService.delete(id).subscribe({
       next: () => {
-        this.triggerSuccess('Course deleted successfully.');
+        this.toast.success(`Course "${title}" deleted successfully.`);
         this.loadCourses();
       },
-      error: () => this.errorMessage.set('Failed to delete course. It may have active student enrollments.')
+      error: () => {
+        this.toast.error('Failed to delete course. It may have active student enrollments.');
+      }
     });
-  }
-
-  private triggerSuccess(message: string) {
-    this.successMessage.set(message);
-    setTimeout(() => this.successMessage.set(null), 4000);
   }
 }

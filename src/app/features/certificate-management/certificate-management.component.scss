@@ -355,6 +355,19 @@
           color: #16a34a;
           font-weight: 600;
         }
+
+        .text-error-hint {
+          font-size: 0.78rem;
+          color: #dc2626;
+          font-weight: 600;
+        }
+
+        .input-invalid {
+          border-color: #ef4444 !important;
+          background-color: #fef2f2 !important;
+          color: #b91c1c !important;
+          box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+        }
       }
     }
   }

@@ -13,6 +13,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, concatMap, tap, catchError, switchMap, EMPTY, merge } from 'rxjs';
 import { EnrollmentService } from '../services/enrollment.service';
 import { Enrollment } from '../models/enrollment.model';
+import { ToastService } from '../services/toast.service';
 
 export const EnrollmentStore = signalStore(
   { providedIn: 'root' },
@@ -23,7 +24,12 @@ export const EnrollmentStore = signalStore(
       () => store.entities().filter((e: Enrollment) => e.status === 'Pending').length
     ),
   })),
-  withMethods((store, api = inject(EnrollmentService), sync = inject(LiveSyncService)) => ({
+  withMethods((
+    store, 
+    api = inject(EnrollmentService), 
+    sync = inject(LiveSyncService),
+    toast = inject(ToastService)
+  ) => ({
     // Listens to SignalR live sync stream and updates store state automatically
     listenForLiveUpdates: rxMethod<void>(
       pipe(
@@ -81,13 +87,12 @@ export const EnrollmentStore = signalStore(
         tap(() => patchState(store, { error: null })),
         concatMap((request) =>
           api.create(request.courseCode, request).pipe(
-            // tap((createdEnrollment: Enrollment) => {
-              
-            //   patchState(store, addEntity(createdEnrollment));
-            // }),
             tap((createdEnrollment: any) => {
-              // Normalize the response to match store entity types and filter rules
-              const normId = Number(createdEnrollment?.id || createdEnrollment?.enrollmentId || Date.now());
+              const normId = Number(
+                createdEnrollment?.id || 
+                createdEnrollment?.enrollmentId || 
+                Date.now()
+              );
               const normalizedEnrollment: Enrollment = {
                 ...createdEnrollment,
                 id: normId,
@@ -97,11 +102,15 @@ export const EnrollmentStore = signalStore(
                 enrolledAt: createdEnrollment?.enrolledAt || new Date().toISOString()
               };
 
-              // Instantly add the entity to the store state
               patchState(store, addEntity(normalizedEnrollment));
+              toast.success(
+                `Enrollment requested for ${request.courseCode}! Awaiting Administrator review.`
+              );
             }),
             catchError((err) => {
-              patchState(store, { error: err.message || 'Failed to enroll in course' });
+              const errMsg = err.error?.detail || err.message || 'Failed to enroll in course.';
+              patchState(store, { error: errMsg });
+              toast.error(errMsg);
               return EMPTY;
             })
           )
@@ -121,6 +130,9 @@ export const EnrollmentStore = signalStore(
         }),
         concatMap(id =>
           api.approve(id).pipe(
+            tap(() => {
+              toast.success('Enrollment approved successfully.');
+            }),
             catchError(err => {
               patchState(
                 store, 
@@ -129,7 +141,9 @@ export const EnrollmentStore = signalStore(
                   changes: (entity) => ({ ...entity, status: 'Pending' }) 
                 })
               );
-              patchState(store, { error: 'Server rejected the approval.' });
+              const errMsg = err.error?.detail || err.message || 'Server rejected the approval.';
+              patchState(store, { error: errMsg });
+              toast.error(errMsg);
               return EMPTY;
             })
           )

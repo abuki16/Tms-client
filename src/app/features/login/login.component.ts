@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, LoginRequest } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -22,13 +23,6 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
           <h2>Training Management System</h2>
           <p class="subtitle">Sign in to your professional portal</p>
         </div>
-
-        <!-- Error Banner -->
-        @if (errorMessage) {
-          <div class="alert error">
-            <span>⚠️</span> {{ errorMessage }}
-          </div>
-        }
 
         <!-- Form -->
         <form (submit)="onLogin($event)" class="login-form">
@@ -141,19 +135,6 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
         font-size: 0.9rem;
         margin: 0;
       }
-    }
-
-    .alert.error {
-      background: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .login-form {
@@ -272,22 +253,22 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   credentials: LoginRequest = {
     email: '',
     password: ''
   };
 
-  errorMessage = '';
   isLoading = false;
 
   async onLogin(event: Event) {
     event.preventDefault();
-    this.errorMessage = '';
     this.isLoading = true;
 
     try {
       await this.authService.login(this.credentials);
+      this.toast.success('Signed in successfully!');
       
       const user = this.authService.currentUser();
       const role = user?.role;
@@ -301,8 +282,11 @@ export class LoginComponent {
       } else {
         this.router.navigate(['/dashboard']);
       }
-    } catch (err) {
-      this.errorMessage = 'Invalid email or password. Please try again.';
+    } catch (err: any) {
+      const errorMsg = err.error?.detail || 
+                       err.error?.message || 
+                       'Invalid email or password. Please try again.';
+      this.toast.error(errorMsg);
     } finally {
       this.isLoading = false;
     }

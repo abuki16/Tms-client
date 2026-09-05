@@ -7,6 +7,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AssessmentService } from '../../services/assessment.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { 
   AssessmentResponseDto, 
   AssessmentResultResponseDto, 
@@ -70,19 +71,31 @@ export interface GradebookRow {
   continuousScore: number | null;
   midtermScore: number | null;
   finalScore: number | null;
-  isSaving?: boolean;
+  enrollmentStatus?: string;
+  isApproved: boolean;
+  isSaving: boolean;
 }
 
+/**
+ * Instructor Assessment & Grading Portal Component
+ * Handles standardized 100% academic curriculum, progressive gradebook scoring,
+ * and administrator approval validation locks.
+ */
 @Component({
   selector: 'tms-instructor-grading',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterLink
+  ],
   templateUrl: './instructor-grading.component.html',
   styleUrl: './instructor-grading.component.scss'
 })
 export class InstructorGradingComponent implements OnInit {
   private assessmentService = inject(AssessmentService);
   private http = inject(HttpClient);
+  private toast = inject(ToastService);
   public authService = inject(AuthService);
 
   readonly standardAssessments = STANDARD_ASSESSMENTS;
@@ -118,9 +131,6 @@ export class InstructorGradingComponent implements OnInit {
   // Custom Assessment Form Model (for optional advanced curriculum extensions)
   newAssessment: CreateAssessmentRequest = { title: '', maxScore: 100, weight: 0.30 };
   newGrade: GradeStudentRequest = { title: '', scoreObtained: 0, weight: 0.30, studentId: 0 };
-
-  errorMessage = '';
-  successMessage = '';
 
   ngOnInit() {
     this.loadCourses();
@@ -231,14 +241,21 @@ export class InstructorGradingComponent implements OnInit {
     const currentAssessments = this.assessments();
 
     if (enrollments.length === 0 || currentAssessments.length === 0) {
-      const baseRows: GradebookRow[] = enrollments.map(e => ({
-        studentId: e.studentId,
-        studentName: e.studentName || `Student #${e.studentId}`,
-        registrationNumber: e.registrationNumber,
-        continuousScore: null,
-        midtermScore: null,
-        finalScore: null
-      }));
+      const baseRows: GradebookRow[] = enrollments.map(e => {
+        const isApproved = (e.status || e.Status || '').toLowerCase() === 'approved';
+        const enrollmentStatus = e.status || e.Status || 'Pending';
+        return {
+          studentId: e.studentId,
+          studentName: e.studentName || `Student #${e.studentId}`,
+          registrationNumber: e.registrationNumber,
+          continuousScore: null,
+          midtermScore: null,
+          finalScore: null,
+          enrollmentStatus: enrollmentStatus,
+          isApproved: isApproved,
+          isSaving: false
+        };
+      });
       this.gradebookRows.set(baseRows);
       return;
     }
@@ -255,6 +272,8 @@ export class InstructorGradingComponent implements OnInit {
       next: (allResults) => {
         const rows: GradebookRow[] = enrollments.map(e => {
           const sId = Number(e.studentId);
+          const isApproved = (e.status || e.Status || '').toLowerCase() === 'approved';
+          const enrollmentStatus = e.status || e.Status || 'Pending';
           let contScore: number | null = null;
           let midScore: number | null = null;
           let finScore: number | null = null;
@@ -281,6 +300,8 @@ export class InstructorGradingComponent implements OnInit {
             continuousScore: contScore,
             midtermScore: midScore,
             finalScore: finScore,
+            enrollmentStatus: enrollmentStatus,
+            isApproved: isApproved,
             isSaving: false
           };
         });
@@ -346,11 +367,24 @@ export class InstructorGradingComponent implements OnInit {
            this.isFinalInvalid(row.finalScore);
   }
 
+  isRowApproved(row: GradebookRow): boolean {
+    return !!row?.isApproved;
+  }
+
   isQuickScoreInvalid(): boolean {
     const config = this.standardAssessments[this.quickAssessment.assessmentIndex];
     if (this.quickAssessment.scoreObtained === null || this.quickAssessment.scoreObtained === undefined || (this.quickAssessment.scoreObtained as any) === '') return false;
     const num = Number(this.quickAssessment.scoreObtained);
     return isNaN(num) || num < 0 || num > config.maxScore;
+  }
+
+  isQuickStudentApproved(): boolean {
+    if (!this.quickAssessment.studentId) return true;
+    const enroll = this.courseEnrollments().find(e => 
+      Number(e.studentId) === this.quickAssessment.studentId
+    );
+    if (!enroll) return false;
+    return (enroll.status || enroll.Status || '').toLowerCase() === 'approved';
   }
 
   getCompletedComponentsCount(row: GradebookRow): number {
@@ -363,32 +397,51 @@ export class InstructorGradingComponent implements OnInit {
 
   // Submits marks for an individual student from the Gradebook
   saveStudentMarks(row: GradebookRow) {
+    if (!row.isApproved) {
+      this.toast.error(
+        `Cannot grade ${row.studentName}: Student enrollment is pending Administrator approval.`
+      );
+      return;
+    }
+
     if (this.isRowInvalid(row)) {
-      this.errorMessage = `Invalid information entered for ${row.studentName}. Continuous must be 0-20, Midterm 0-30, and Final Examination 0-50.`;
+      this.toast.error(
+        `Invalid score entered for ${row.studentName}. Continuous must be 0-20, Midterm 0-30, and Final Examination 0-50.`
+      );
       return;
     }
 
     if (row.continuousScore !== null && (row.continuousScore < 0 || row.continuousScore > 20)) {
-      this.errorMessage = `Continuous Assessment score for ${row.studentName} must be between 0 and 20.`;
+      this.toast.error(
+        `Continuous Assessment score for ${row.studentName} must be between 0 and 20.`
+      );
       return;
     }
     if (row.midtermScore !== null && (row.midtermScore < 0 || row.midtermScore > 30)) {
-      this.errorMessage = `Midterm Examination score for ${row.studentName} must be between 0 and 30.`;
+      this.toast.error(
+        `Midterm Examination score for ${row.studentName} must be between 0 and 30.`
+      );
       return;
     }
     if (row.finalScore !== null && (row.finalScore < 0 || row.finalScore > 50)) {
-      this.errorMessage = `Final Examination score for ${row.studentName} must be between 0 and 50.`;
+      this.toast.error(
+        `Final Examination score for ${row.studentName} must be between 0 and 50.`
+      );
       return;
     }
 
     row.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     const currentAssessments = this.assessments();
-    const contAsm = currentAssessments.find(a => a.title.toLowerCase().includes('continuous') || a.title.toLowerCase().includes('ca'));
-    const midAsm = currentAssessments.find(a => a.title.toLowerCase().includes('mid'));
-    const finAsm = currentAssessments.find(a => a.title.toLowerCase().includes('final'));
+    const contAsm = currentAssessments.find(a => 
+      a.title.toLowerCase().includes('continuous') || a.title.toLowerCase().includes('ca')
+    );
+    const midAsm = currentAssessments.find(a => 
+      a.title.toLowerCase().includes('mid')
+    );
+    const finAsm = currentAssessments.find(a => 
+      a.title.toLowerCase().includes('final')
+    );
 
     const gradingCalls = [];
 
@@ -427,23 +480,33 @@ export class InstructorGradingComponent implements OnInit {
 
     if (gradingCalls.length === 0) {
       row.isSaving = false;
-      this.errorMessage = `Please enter at least one assessment score for ${row.studentName}.`;
+      this.toast.warning(`Please enter at least one assessment score for ${row.studentName}.`);
       return;
     }
 
     forkJoin(gradingCalls).subscribe({
-      next: () => {
+      next: (responses) => {
         row.isSaving = false;
+        const failedResponse = responses.find(r => r && (r as any).error);
+        if (failedResponse) {
+          const err = (failedResponse as any).error;
+          this.toast.error(
+            err.error?.detail || err.error?.message || `Failed to save all marks for ${row.studentName}.`
+          );
+          return;
+        }
+
         const total = this.getTotalScore(row);
         const gpa = this.getGradePoint(row);
         const letter = this.getLetterGrade(total);
-        this.successMessage = `Scores saved for ${row.studentName}! Total Score: ${total}/100 (${letter}) | Grade: ${gpa.toFixed(2)}/4.00.`;
-        this.errorMessage = '';
+        this.toast.success(
+          `Scores saved for ${row.studentName}! Total: ${total}/100 (${letter}) | Grade: ${gpa.toFixed(2)}/4.00`
+        );
         this.loadCourseEnrollments();
       },
       error: () => {
         row.isSaving = false;
-        this.errorMessage = `Failed to save all scores for ${row.studentName}.`;
+        this.toast.error(`Failed to save all scores for ${row.studentName}.`);
       }
     });
   }
@@ -451,15 +514,26 @@ export class InstructorGradingComponent implements OnInit {
   // Quick Direct Submission using predefined selector
   onQuickAssessStudent() {
     if (!this.quickAssessment.studentId || this.quickAssessment.studentId <= 0) {
-      this.errorMessage = 'Please select a student from the dropdown list.';
-      this.successMessage = '';
+      this.toast.warning('Please select a student from the dropdown list.');
+      return;
+    }
+
+    const enroll = this.courseEnrollments().find(e => 
+      Number(e.studentId) === this.quickAssessment.studentId
+    );
+
+    if (!enroll || (enroll.status || enroll.Status || '').toLowerCase() !== 'approved') {
+      this.toast.error(
+        'Cannot grade student: Student enrollment has not been approved by an administrator.'
+      );
       return;
     }
 
     const config = this.standardAssessments[this.quickAssessment.assessmentIndex];
     if (this.isQuickScoreInvalid()) {
-      this.errorMessage = `Invalid information: Score obtained (${this.quickAssessment.scoreObtained}) must be between 0 and ${config.maxScore} for ${config.title}.`;
-      this.successMessage = '';
+      this.toast.error(
+        `Invalid score: Score obtained (${this.quickAssessment.scoreObtained}) must be between 0 and ${config.maxScore} for ${config.title}.`
+      );
       return;
     }
 
@@ -478,14 +552,16 @@ export class InstructorGradingComponent implements OnInit {
 
       this.assessmentService.gradeStudent(asmId, gradePayload).subscribe({
         next: () => {
-          this.successMessage = `${config.title} score (${this.quickAssessment.scoreObtained}/${config.maxScore}) recorded for ${student?.name || 'student'}! Course total grade and GPA updated.`;
-          this.errorMessage = '';
+          this.toast.success(
+            `${config.title} score (${this.quickAssessment.scoreObtained}/${config.maxScore}) recorded for ${student?.name || 'student'}!`
+          );
           this.loadAssessments();
           this.loadCourseEnrollments();
         },
         error: (err) => {
-          this.errorMessage = err.error?.detail || err.error?.message || 'Failed to record student score.';
-          this.successMessage = '';
+          this.toast.error(
+            err.error?.detail || err.error?.message || 'Failed to record student score.'
+          );
         }
       });
     };
@@ -503,7 +579,7 @@ export class InstructorGradingComponent implements OnInit {
           submitGrade(created.id);
         },
         error: (err) => {
-          this.errorMessage = err.error?.detail || 'Failed to initialize assessment component.';
+          this.toast.error(err.error?.detail || 'Failed to initialize assessment component.');
         }
       });
     }
@@ -517,7 +593,7 @@ export class InstructorGradingComponent implements OnInit {
     );
 
     if (missing.length === 0) {
-      this.successMessage = 'All standard components (20% Continuous + 30% Midterm + 50% Final = 100%) are already registered for this course.';
+      this.toast.info('All standard components (20% + 30% + 50%) are already registered for this course.');
       return;
     }
 
@@ -531,7 +607,7 @@ export class InstructorGradingComponent implements OnInit {
 
     forkJoin(creationCalls).subscribe({
       next: () => {
-        this.successMessage = 'Standard 100% assessment curriculum successfully initialized for this course!';
+        this.toast.success('Standard 100% assessment curriculum successfully initialized for this course!');
         this.loadAssessments();
       }
     });
@@ -587,21 +663,29 @@ export class InstructorGradingComponent implements OnInit {
           this.selectedAssessmentId = null;
           this.results.set([]);
         }
-        this.successMessage = 'Assessment definition deleted.';
+        this.toast.success('Assessment definition deleted.');
         this.loadAssessments();
       },
-      error: (err) => alert(err.error?.detail || 'Failed to delete assessment.')
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'Failed to delete assessment.');
+      }
     });
   }
 
   updateScore(res: AssessmentResultResponseDto) {
     if (!this.selectedAssessmentId) return;
-    this.assessmentService.updateStudentScore(this.selectedAssessmentId, res.id, res.scoreObtained).subscribe({
+    this.assessmentService.updateStudentScore(
+      this.selectedAssessmentId, 
+      res.id, 
+      res.scoreObtained
+    ).subscribe({
       next: () => {
-        this.successMessage = `Score updated for ${res.studentName}.`;
+        this.toast.success(`Score updated for ${res.studentName}.`);
         this.loadCourseEnrollments();
       },
-      error: (err) => alert(err.error?.detail || 'Failed to update score.')
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'Failed to update score.');
+      }
     });
   }
 
@@ -610,10 +694,12 @@ export class InstructorGradingComponent implements OnInit {
     this.assessmentService.deleteResult(this.selectedAssessmentId, resultId).subscribe({
       next: () => {
         this.results.update(list => list.filter(r => r.id !== resultId));
-        this.successMessage = 'Grade record deleted.';
+        this.toast.success('Grade record deleted.');
         this.loadCourseEnrollments();
       },
-      error: (err) => alert(err.error?.detail || 'Failed to delete record.')
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'Failed to delete record.');
+      }
     });
   }
 }

@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 export interface UserDto {
   id: string;
@@ -38,13 +38,17 @@ export interface RegisterRequest {
 @Component({
   selector: 'tms-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatSnackBarModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterLink
+  ],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss'
 })
 export class UserManagementComponent implements OnInit {
   private http = inject(HttpClient);
-  private snackBar = inject(MatSnackBar);
+  private toast = inject(ToastService);
   public authService = inject(AuthService);
   
   private authBaseUrl = '/api/v1/auth';
@@ -88,7 +92,7 @@ export class UserManagementComponent implements OnInit {
       },
       error: () => {
         this.isLoadingUsers = false;
-        this.showSnackbar('Failed to load registered users list.', 'error-snackbar');
+        this.toast.error('Failed to load registered users list.');
       }
     });
   }
@@ -99,12 +103,12 @@ export class UserManagementComponent implements OnInit {
 
     this.http.post(`/api/courses/${courseId}/assign-instructor`, { instructorId }).subscribe({
       next: () => {
-        this.showSnackbar('Course successfully assigned to instructor.', 'success-snackbar');
+        this.toast.success('Course successfully assigned to instructor.');
         this.loadUsers();
         this.loadCourses();
       },
       error: () => {
-        this.showSnackbar('Failed to assign instructor to course.', 'error-snackbar');
+        this.toast.error('Failed to assign instructor to course.');
       }
     });
   }
@@ -117,19 +121,19 @@ export class UserManagementComponent implements OnInit {
       !this.newUser.firstName?.trim() || 
       !this.newUser.lastName?.trim()
     ) {
-      this.showSnackbar('Please complete all required fields before proceeding.', 'error-snackbar');
+      this.toast.error('Please complete all required fields before proceeding.');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.newUser.email.trim())) {
-      this.showSnackbar('Please provide a valid email address.', 'error-snackbar');
+      this.toast.error('Please provide a valid email address.');
       return;
     }
 
     this.http.post(`${this.authBaseUrl}/register`, this.newUser).subscribe({
       next: () => {
-        this.showSnackbar('User account created successfully.', 'success-snackbar');
+        this.toast.success('User account created successfully.');
         this.newUser = {
           email: '',
           password: '',
@@ -143,7 +147,7 @@ export class UserManagementComponent implements OnInit {
       },
       error: (err) => {
         const errMsg = err.error?.message || err.error?.errors?.[0] || 'Failed to create user account.';
-        this.showSnackbar(errMsg, 'error-snackbar');
+        this.toast.error(errMsg);
       }
     });
   }
@@ -165,13 +169,13 @@ export class UserManagementComponent implements OnInit {
       !this.editingUser.lastName?.trim() || 
       !this.editingUser.userName?.trim()
     ) {
-      this.showSnackbar('Please complete all required fields before saving changes.', 'error-snackbar');
+      this.toast.error('Please complete all required fields before saving changes.');
       return;
     }
 
     this.http.put(`${this.authBaseUrl}/users/${this.editingUser.id}`, this.editingUser).subscribe({
       next: () => {
-        this.showSnackbar('User account updated successfully.', 'success-snackbar');
+        this.toast.success('User account updated successfully.');
         
         const index = this.users.findIndex(u => u.id === this.editingUser?.id);
         if (index !== -1 && this.editingUser) {
@@ -182,7 +186,7 @@ export class UserManagementComponent implements OnInit {
       },
       error: (err) => {
         const errMsg = err.error?.message || 'Failed to update user account.';
-        this.showSnackbar(errMsg, 'error-snackbar');
+        this.toast.error(errMsg);
       }
     });
   }
@@ -191,25 +195,16 @@ export class UserManagementComponent implements OnInit {
     if (confirm('Are you sure you want to permanently delete this user account?')) {
       this.http.delete(`${this.authBaseUrl}/users/${userId}`).subscribe({
         next: () => {
-          this.showSnackbar('User account deleted successfully.', 'success-snackbar');
+          this.toast.success('User account deleted successfully.');
           this.users = this.users.filter(u => u.id !== userId);
           if (this.editingUser?.id === userId) {
             this.editingUser = null;
           }
         },
         error: () => {
-          this.showSnackbar('Failed to delete user account.', 'error-snackbar');
+          this.toast.error('Failed to delete user account.');
         }
       });
     }
-  }
-
-  private showSnackbar(message: string, panelClass: string) {
-    this.snackBar.open(message, 'Close', {
-      duration: 4000,
-      horizontalPosition: 'right',
-      verticalPosition: 'top',
-      panelClass: [panelClass]
-    });
   }
 }

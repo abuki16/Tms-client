@@ -22,16 +22,6 @@
     </button>
   </form>
 
-  <!-- Success Notification -->
-  <div *ngIf="successMessage" class="alert alert-success mt-3">
-    {{ successMessage }}
-  </div>
-
-  <!-- Error Notification -->
-  <div *ngIf="errorMessage" class="alert alert-danger mt-3">
-    {{ errorMessage }}
-  </div>
-
   <!-- Display Issued Certificate Card with HATEOAS Links -->
   <div *ngIf="issuedCertificate" class="card mt-4 p-3">
     <h4>Certificate Details</h4>
